@@ -3,14 +3,19 @@
  * Validates and checks if a slug is available
  */
 
-import { databases as serverDatabases, Query } from '@/lib/appwrite-server';
-
-const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
-const FORMS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_FORMS_COLLECTION_ID!;
+import { databases as serverDatabases, Query, DATABASE_ID, FORMS_COLLECTION_ID } from '@/lib/appwrite-server';
 
 export async function POST(request: Request) {
   try {
     const { slug, currentFormId } = await request.json();
+
+    if (!DATABASE_ID || !FORMS_COLLECTION_ID) {
+      console.error('Missing Appwrite configuration (DATABASE_ID or FORMS_COLLECTION_ID)');
+      return Response.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
 
     // Validation
     if (!slug || typeof slug !== 'string') {

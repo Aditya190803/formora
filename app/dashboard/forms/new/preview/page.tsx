@@ -44,6 +44,13 @@ export default function PreviewPage() {
       style: formData.style || 'classic',
       questions: formData.questions || [],
       isPublished: false,
+      primaryColor: formData.primaryColor,
+      backgroundColor: formData.backgroundColor,
+      textColor: formData.textColor,
+      fontFamily: formData.fontFamily,
+      backgroundImage: formData.backgroundImage,
+      animationSpeed: formData.animationSpeed,
+      buttonText: formData.buttonText,
     };
 
     const handleMockSubmit = (answers: Record<string, string | string[]>) => {

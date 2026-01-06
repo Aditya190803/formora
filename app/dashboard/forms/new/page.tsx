@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@stackframe/stack';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,6 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   ArrowLeft,
   Plus,
@@ -31,15 +38,26 @@ import {
   Hash,
   Edit3,
   Zap,
-  Minus
+  Minus,
+  ImagePlus,
+  XCircle,
+  RotateCcw,
+  CheckCircle2,
+  AlertCircle,
+  GitBranch,
+  Calculator,
+  Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import { 
   Question, 
   QuestionType, 
   FormStyle, 
+  LogicJump,
+  CalculationRule,
+  ConditionOperator
 } from '@/lib/types';
-import { formsService, authService } from '@/lib/appwrite';
+import { formsService, storageService, authService } from '@/lib/appwrite';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
@@ -81,6 +99,7 @@ const styleIcons: Record<FormStyle, React.ElementType> = {
 function SortableQuestion({ 
   question, 
   index, 
+  allQuestions,
   updateQuestion, 
   deleteQuestion, 
   duplicateQuestion,
@@ -90,6 +109,7 @@ function SortableQuestion({
 }: { 
   question: Question; 
   index: number; 
+  allQuestions: Question[];
   updateQuestion: (id: string, updates: Partial<Question>) => void; 
   deleteQuestion: (id: string) => void; 
   duplicateQuestion: (id: string) => void;
@@ -113,118 +133,340 @@ function SortableQuestion({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const [activeQuestionTab, setActiveQuestionTab] = useState('content');
+
+  const addLogicJump = () => {
+    const newJump: LogicJump = {
+      id: uuidv4(),
+      conditions: [],
+      action: 'jump',
+      destinationQuestionId: '',
+    };
+    updateQuestion(question.id, { 
+      logicJumps: [...(question.logicJumps || []), newJump] 
+    });
+  };
+
+  const removeLogicJump = (jumpId: string) => {
+    updateQuestion(question.id, { 
+      logicJumps: (question.logicJumps || []).filter(j => j.id !== jumpId) 
+    });
+  };
+
+  const updateLogicJump = (jumpId: string, updates: Partial<LogicJump>) => {
+    updateQuestion(question.id, { 
+      logicJumps: (question.logicJumps || []).map(j => 
+        j.id === jumpId ? { ...j, ...updates } : j
+      ) 
+    });
+  };
+
   return (
     <div 
       ref={setNodeRef} 
       style={style} 
-      className="group relative p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all"
+      className="group relative border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all overflow-hidden"
     >
       <div 
         {...attributes} 
         {...listeners}
-        className="absolute -left-4 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-2 border-4 border-foreground bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+        className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 cursor-grab active:cursor-grabbing p-2 border-4 border-foreground bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
       >
         <GripVertical className="w-6 h-6 stroke-[3]" />
       </div>
-      
-      <div className="flex items-start justify-between gap-6 mb-8">
-        <div className="flex-1 space-y-4">
-          <div className="flex items-center gap-4">
-            <span className="w-10 h-10 border-4 border-foreground bg-primary text-white flex items-center justify-center font-black italic shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+
+      <Tabs value={activeQuestionTab} onValueChange={setActiveQuestionTab} className="w-full">
+        <div className="flex items-center justify-between border-b-4 border-foreground bg-muted/30 px-6 py-2">
+          <TabsList className="h-10 border-2 border-foreground bg-background p-1">
+            <TabsTrigger value="content" className="font-black uppercase italic text-[10px] px-4 data-[state=active]:bg-primary data-[state=active]:text-white">
+              Content
+            </TabsTrigger>
+            <TabsTrigger value="logic" className="font-black uppercase italic text-[10px] px-4 data-[state=active]:bg-primary data-[state=active]:text-white">
+              Logic
+            </TabsTrigger>
+          </TabsList>
+          <div className="flex items-center gap-2">
+            <span className="w-8 h-8 border-2 border-foreground bg-primary text-white flex items-center justify-center font-black italic text-xs shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
               {index + 1}
             </span>
+            <div className="px-3 py-1 border-2 border-foreground bg-muted text-[8px] font-black uppercase tracking-widest">
+              {question.type.replace('_', ' ')}
+            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => duplicateQuestion(question.id)}
+              className="h-8 w-8 hover:text-primary transition-all"
+              title="Duplicate Question"
+            >
+              <Copy className="w-4 h-4 stroke-[2]" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => deleteQuestion(question.id)}
+              className="h-8 w-8 hover:text-destructive transition-all"
+              title="Delete Question"
+            >
+              <Trash2 className="w-4 h-4 stroke-[2]" />
+            </Button>
+          </div>
+        </div>
+
+        <TabsContent value="content" className="p-8 mt-0 space-y-6">
+          <div className="space-y-4">
             <Input 
               value={question.title}
               onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
               placeholder="ENTER YOUR QUESTION..."
               className="h-12 border-4 border-foreground bg-muted/30 text-xl font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
             />
-          </div>
-          <Textarea 
-            value={question.description}
-            onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
-            placeholder="ADD A DESCRIPTION (OPTIONAL)..."
-            className="min-h-[80px] border-4 border-foreground bg-muted/10 font-bold uppercase focus-visible:ring-0"
-          />
-          {(question.type === 'short_text' || question.type === 'long_text' || question.type === 'email' || question.type === 'number') && (
-            <Input 
-              value={question.placeholder || ''}
-              onChange={(e) => updateQuestion(question.id, { placeholder: e.target.value })}
-              placeholder="INPUT PLACEHOLDER (OPTIONAL)..."
-              className="h-10 border-2 border-foreground bg-muted/5 font-bold uppercase italic focus-visible:ring-0"
+            <Textarea 
+              value={question.description}
+              onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+              placeholder="ADD A DESCRIPTION (OPTIONAL)..."
+              className="min-h-[80px] border-4 border-foreground bg-muted/10 font-bold uppercase focus-visible:ring-0"
             />
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => duplicateQuestion(question.id)}
-            className="h-12 w-12 border-2 border-transparent hover:border-primary hover:bg-primary/10 text-primary transition-all"
-            title="Duplicate Question"
-          >
-            <Copy className="w-6 h-6 stroke-[3]" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => deleteQuestion(question.id)}
-            className="h-12 w-12 border-2 border-transparent hover:border-destructive hover:bg-destructive/10 text-destructive transition-all"
-            title="Delete Question"
-          >
-            <Trash2 className="w-6 h-6 stroke-[3]" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Options for choice types */}
-      {(question.type === 'multiple_choice' || question.type === 'checkboxes' || question.type === 'dropdown') && (
-        <div className="space-y-4 pl-14">
-          <div className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">Options</div>
-          {question.options?.map((option) => (
-            <div key={option.id} className="flex items-center gap-4">
-              <div className="w-6 h-6 border-2 border-foreground bg-muted" />
+            {(question.type === 'short_text' || question.type === 'long_text' || question.type === 'email' || question.type === 'number') && (
               <Input 
-                value={option.label}
-                onChange={(e) => updateOption(question.id, option.id, e.target.value)}
-                className="h-10 border-2 border-foreground bg-card font-bold uppercase"
+                value={question.placeholder || ''}
+                onChange={(e) => updateQuestion(question.id, { placeholder: e.target.value })}
+                placeholder="INPUT PLACEHOLDER (OPTIONAL)..."
+                className="h-10 border-2 border-foreground bg-muted/5 font-bold uppercase italic focus-visible:ring-0"
               />
+            )}
+          </div>
+
+          {(question.type === 'multiple_choice' || question.type === 'checkboxes' || question.type === 'dropdown') && (
+            <div className="space-y-4 border-l-4 border-foreground/10 pl-6 py-2">
+              <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Choice Options</div>
+              {question.options?.map((option) => (
+                <div key={option.id} className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-foreground bg-muted shrink-0" />
+                  <Input 
+                    value={option.label}
+                    onChange={(e) => updateOption(question.id, option.id, e.target.value)}
+                    className="h-10 border-2 border-foreground bg-card font-bold uppercase"
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => deleteOption(question.id, option.id)}
+                    className="h-10 w-10 hover:text-destructive shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
               <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => deleteOption(question.id, option.id)}
-                className="h-10 w-10 hover:text-destructive"
+                variant="outline" 
+                size="sm" 
+                onClick={() => addOption(question.id)}
+                className="mt-4 border-2 border-foreground bg-card shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all font-black uppercase italic text-[10px]"
               >
-                <Trash2 className="w-4 h-4" />
+                <Plus className="w-4 h-4 mr-2" />
+                Add Option
               </Button>
             </div>
-          ))}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => addOption(question.id)}
-            className="mt-4 border-2 border-foreground bg-card shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all font-black uppercase italic text-xs"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Option
-          </Button>
-        </div>
-      )}
+          )}
 
-      <div className="mt-8 pt-6 border-t-4 border-foreground/10 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Checkbox 
-            id={`req-${question.id}`} 
-            checked={question.required}
-            onCheckedChange={(checked) => updateQuestion(question.id, { required: !!checked })}
-            className="w-6 h-6 border-4 border-foreground data-[state=checked]:bg-primary"
-          />
-          <Label htmlFor={`req-${question.id}`} className="font-black uppercase italic text-sm cursor-pointer">Required</Label>
-        </div>
-        <div className="px-4 py-1 border-2 border-foreground bg-muted text-[10px] font-black uppercase tracking-widest">
-          {question.type.replace('_', ' ')}
-        </div>
-      </div>
+          <div className="pt-4 border-t-2 border-foreground/5 flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <Checkbox 
+                id={`req-${question.id}`} 
+                checked={question.required}
+                onCheckedChange={(checked) => updateQuestion(question.id, { required: !!checked })}
+                className="w-6 h-6 border-4 border-foreground data-[state=checked]:bg-primary"
+              />
+              <Label htmlFor={`req-${question.id}`} className="font-black uppercase italic text-xs cursor-pointer">Required Question</Label>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="logic" className="p-8 mt-0 space-y-8 animate-in fade-in slide-in-from-top-4">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xl font-black uppercase italic flex items-center gap-2">
+                  <GitBranch className="w-5 h-5 text-primary" />
+                  Jump Logic
+                </h4>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">Control the path of your form based on answers.</p>
+              </div>
+              <Button
+                size="sm"
+                onClick={addLogicJump}
+                className="border-4 border-foreground bg-card text-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all font-black uppercase italic text-[10px]"
+              >
+                <Plus className="w-3 h-3 mr-2" />
+                Add Jump
+              </Button>
+            </div>
+
+            {(!question.logicJumps || question.logicJumps.length === 0) ? (
+              <div className="p-8 border-4 border-foreground border-dashed bg-muted/5 text-center">
+                <p className="font-black uppercase italic text-xs text-muted-foreground">No logic jumps defined. This question will always lead to the next one.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {(question.logicJumps || []).map((jump, jIndex) => (
+                  <div key={jump.id} className="p-6 border-4 border-foreground bg-muted/10 space-y-4 relative">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeLogicJump(jump.id)}
+                      className="absolute top-2 right-2 h-8 w-8 hover:text-destructive"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </Button>
+
+                    <div className="flex flex-wrap items-center gap-3 font-black uppercase italic text-xs">
+                      <span className="bg-foreground text-white px-2 py-0.5">IF</span>
+                      <span>ANSWER</span>
+                      <Select 
+                        value={jump.conditions[0]?.operator || 'equals'}
+                        onValueChange={(val) => {
+                          const conds = [...jump.conditions];
+                          if (conds[0]) conds[0].operator = val as ConditionOperator;
+                          else conds.push({ id: uuidv4(), questionId: question.id, operator: val as ConditionOperator, value: '' });
+                          updateLogicJump(jump.id, { conditions: conds });
+                        }}
+                      >
+                        <SelectTrigger className="w-[140px] h-8 border-2 border-foreground bg-card text-[10px] font-black uppercase">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="equals">Equals</SelectItem>
+                          <SelectItem value="not_equals">Does Not Equal</SelectItem>
+                          <SelectItem value="contains">Contains</SelectItem>
+                          <SelectItem value="not_contains">Does Not Contain</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Input 
+                        value={jump.conditions[0]?.value || ''}
+                        onChange={(e) => {
+                          const conds = [...jump.conditions];
+                          if (conds[0]) conds[0].value = e.target.value;
+                          else conds.push({ id: uuidv4(), questionId: question.id, operator: 'equals', value: e.target.value });
+                          updateLogicJump(jump.id, { conditions: conds });
+                        }}
+                        className="h-8 w-[150px] border-2 border-foreground bg-card text-[10px] font-black uppercase"
+                        placeholder="VALUE..."
+                      />
+                      <span className="bg-primary text-white px-2 py-0.5">THEN</span>
+                      <span className="bg-foreground text-white px-2 py-0.5">JUMP TO</span>
+                      <Select 
+                        value={jump.destinationQuestionId || ''}
+                        onValueChange={(val) => updateLogicJump(jump.id, { 
+                          action: val === 'end' ? 'end' : 'jump',
+                          destinationQuestionId: val === 'end' ? undefined : val 
+                        })}
+                      >
+                        <SelectTrigger className="w-[200px] h-8 border-2 border-foreground bg-card text-[10px] font-black uppercase">
+                          <SelectValue placeholder="SELECT QUESTION" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="end">End of Form</SelectItem>
+                          {allQuestions
+                            .filter(q => q.id !== question.id)
+                            .map((otherQ, otherIndex) => (
+                              <SelectItem key={otherQ.id} value={otherQ.id}>
+                                {otherIndex + 1}. {otherQ.title || 'Untitled'}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {question.type === 'number' && (
+              <div className="pt-8 border-t-4 border-foreground/10 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xl font-black uppercase italic flex items-center gap-2">
+                      <Calculator className="w-5 h-5 text-primary" />
+                      Calculations
+                    </h4>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Update other fields based on this numeric answer.</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      const newCalc: CalculationRule = { id: uuidv4(), formula: '', targetQuestionId: '' };
+                      updateQuestion(question.id, { calculations: [...(question.calculations || []), newCalc] });
+                    }}
+                    className="border-4 border-foreground bg-card text-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all font-black uppercase italic text-[10px]"
+                  >
+                    <Plus className="w-3 h-3 mr-2" />
+                    Add Calc
+                  </Button>
+                </div>
+
+                {(!question.calculations || question.calculations.length === 0) ? (
+                  <div className="p-8 border-4 border-foreground border-dashed bg-muted/5 text-center">
+                    <p className="font-black uppercase italic text-xs text-muted-foreground">No calculations defined for this numeric field.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {question.calculations.map((calc, cIndex) => (
+                      <div key={calc.id} className="p-6 border-4 border-foreground bg-muted/10 space-y-4 relative">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => updateQuestion(question.id, { calculations: question.calculations?.filter(c => c.id !== calc.id) })}
+                          className="absolute top-2 right-2 h-8 w-8 hover:text-destructive"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </Button>
+
+                        <div className="flex flex-wrap items-center gap-3 font-black uppercase italic text-xs">
+                          <span className="bg-foreground text-white px-2 py-0.5">SET</span>
+                          <Select 
+                            value={calc.targetQuestionId}
+                            onValueChange={(val) => {
+                              const calcs = [...(question.calculations || [])];
+                              calcs[cIndex].targetQuestionId = val;
+                              updateQuestion(question.id, { calculations: calcs });
+                            }}
+                          >
+                            <SelectTrigger className="w-[180px] h-8 border-2 border-foreground bg-card text-[10px] font-black uppercase">
+                              <SelectValue placeholder="TARGET FIELD" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {allQuestions
+                                .filter(q => q.id !== question.id && q.type === 'number')
+                                .map((otherQ, otherIndex) => (
+                                  <SelectItem key={otherQ.id} value={otherQ.id}>
+                                    {otherIndex + 1}. {otherQ.title || 'Untitled'}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <span className="bg-primary text-white px-2 py-0.5">TO</span>
+                          <Input 
+                            value={calc.formula}
+                            onChange={(e) => {
+                              const calcs = [...(question.calculations || [])];
+                              calcs[cIndex].formula = e.target.value;
+                              updateQuestion(question.id, { calculations: calcs });
+                            }}
+                            className="h-8 flex-1 min-w-[200px] border-2 border-foreground bg-card text-[10px] font-black uppercase"
+                            placeholder="FORMULA (e.g. {{self}} * 1.1)"
+                          />
+                        </div>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase opacity-70">Use {"{{self}}"} for this question's value, or {"{{qID}}"} for others.</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -236,6 +478,12 @@ export default function NewFormPage() {
   const [description, setDescription] = useState('');
   const [style, setStyle] = useState<FormStyle>('conversational');
   const [primaryColor, setPrimaryColor] = useState('#3b82f6');
+  const [backgroundColor, setBackgroundColor] = useState('#ffffff');
+  const [textColor, setTextColor] = useState('#000000');
+  const [fontFamily, setFontFamily] = useState('sans');
+  const [backgroundImage, setBackgroundImage] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [animationSpeed, setAnimationSpeed] = useState(0.4);
   const [buttonText, setButtonText] = useState('Submit');
   const [slug, setSlug] = useState('');
   const [limitOneResponse, setLimitOneResponse] = useState(false);
@@ -245,6 +493,56 @@ export default function NewFormPage() {
   const [activeTab, setActiveTab] = useState('build');
   const [saving, setSaving] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [slugError, setSlugError] = useState('');
+  const [isSlugValidating, setIsSlugValidating] = useState(false);
+  const [debouncedSlug, setDebouncedSlug] = useState('');
+
+  // Debounce slug validation
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSlug(slug);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [slug]);
+
+  const validateSlug = useCallback(async (value: string) => {
+    if (!value) {
+      setSlugError('');
+      return true;
+    }
+
+    setIsSlugValidating(true);
+    try {
+      const response = await fetch('/api/forms/validate-slug', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ slug: value }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setSlugError(data.error || 'Validation failed');
+        return false;
+      }
+      setSlugError('');
+      return true;
+    } catch (error) {
+      console.error('Network error during slug validation:', error);
+      return false;
+    } finally {
+      setIsSlugValidating(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (debouncedSlug && debouncedSlug !== '') {
+      validateSlug(debouncedSlug);
+    } else {
+      setSlugError('');
+    }
+  }, [debouncedSlug, validateSlug]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -345,6 +643,44 @@ export default function NewFormPage() {
     }));
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const url = await storageService.uploadFile(file);
+      setBackgroundImage(url);
+      toast.success('Image uploaded successfully');
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast.error('Failed to upload image. Make sure Storage is configured.');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleResetDesign = () => {
+    setPrimaryColor('#3b82f6');
+    setBackgroundColor('#ffffff');
+    setTextColor('#000000');
+    setFontFamily('sans');
+    setAnimationSpeed(0.4);
+    setButtonText('Submit');
+    setBackgroundImage('');
+    toast.success('Design reset to defaults');
+  };
+
   const handlePreview = () => {
     if (questions.length === 0) {
       toast.error('Add at least one question to preview');
@@ -356,6 +692,11 @@ export default function NewFormPage() {
       description,
       style,
       primaryColor,
+      backgroundColor,
+      textColor,
+      fontFamily,
+      backgroundImage,
+      animationSpeed,
       buttonText,
       questions,
     };
@@ -371,6 +712,15 @@ export default function NewFormPage() {
     if (questions.length === 0) {
       toast.error('Please add at least one question');
       return;
+    }
+
+    if (slug) {
+      const isSlugAvailable = await validateSlug(slug);
+      if (!isSlugAvailable) {
+        toast.error('Please fix the slug error before saving');
+        setActiveTab('settings');
+        return;
+      }
     }
 
     setSaving(true);
@@ -394,6 +744,11 @@ export default function NewFormPage() {
         description,
         style,
         primaryColor,
+        backgroundColor,
+        textColor,
+        fontFamily,
+        backgroundImage,
+        animationSpeed,
         buttonText,
         slug,
         limitOneResponse,
@@ -519,6 +874,7 @@ export default function NewFormPage() {
                             key={question.id}
                             question={question}
                             index={index}
+                            allQuestions={questions}
                             updateQuestion={updateQuestion}
                             deleteQuestion={deleteQuestion}
                             duplicateQuestion={duplicateQuestion}
@@ -580,7 +936,18 @@ export default function NewFormPage() {
               </div>
 
               <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
-                <h3 className="text-3xl font-black uppercase italic">Customization</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-3xl font-black uppercase italic">Customization</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetDesign}
+                    className="border-2 border-foreground font-black uppercase italic text-xs h-8 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+                  >
+                    <RotateCcw className="w-3 h-3 mr-2" />
+                    Reset to Default
+                  </Button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <Label className="text-sm font-black uppercase tracking-widest ml-1">Primary Color</Label>
@@ -600,6 +967,55 @@ export default function NewFormPage() {
                     </div>
                   </div>
                   <div className="space-y-3">
+                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Background Color</Label>
+                    <div className="flex gap-4">
+                      <Input 
+                        type="color"
+                        value={backgroundColor}
+                        onChange={(e) => setBackgroundColor(e.target.value)}
+                        className="h-14 w-24 border-4 border-foreground bg-muted/30 p-1 cursor-pointer"
+                      />
+                      <Input 
+                        value={backgroundColor}
+                        onChange={(e) => setBackgroundColor(e.target.value)}
+                        placeholder="#FFFFFF"
+                        className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Text Color</Label>
+                    <div className="flex gap-4">
+                      <Input 
+                        type="color"
+                        value={textColor}
+                        onChange={(e) => setTextColor(e.target.value)}
+                        className="h-14 w-24 border-4 border-foreground bg-muted/30 p-1 cursor-pointer"
+                      />
+                      <Input 
+                        value={textColor}
+                        onChange={(e) => setTextColor(e.target.value)}
+                        placeholder="#000000"
+                        className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Font Family</Label>
+                    <Select value={fontFamily} onValueChange={setFontFamily}>
+                      <SelectTrigger className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus:ring-0">
+                        <SelectValue placeholder="SELECT FONT" />
+                      </SelectTrigger>
+                      <SelectContent className="border-4 border-foreground p-2">
+                        <SelectItem value="sans" className="font-sans font-black uppercase italic">Sans Serif (Inter)</SelectItem>
+                        <SelectItem value="serif" className="font-serif font-black uppercase italic">Serif (Playfair)</SelectItem>
+                        <SelectItem value="mono" className="font-mono font-black uppercase italic">Monospace (JetBrains)</SelectItem>
+                        <SelectItem value="heading" className="font-black uppercase italic">Heading (Impact Style)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-3">
                     <Label className="text-sm font-black uppercase tracking-widest ml-1">Submit Button Text</Label>
                     <Input 
                       value={buttonText}
@@ -607,6 +1023,64 @@ export default function NewFormPage() {
                       placeholder="SUBMIT"
                       className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
                     />
+                  </div>
+
+                  {style === 'conversational' && (
+                    <div className="space-y-3">
+                      <Label className="text-sm font-black uppercase tracking-widest ml-1">Animation Speed ({animationSpeed}s)</Label>
+                      <div className="flex items-center gap-4 h-14 border-4 border-foreground bg-muted/30 px-4">
+                        <input 
+                          type="range" 
+                          min="0.1" 
+                          max="1.5" 
+                          step="0.1"
+                          value={animationSpeed}
+                          onChange={(e) => setAnimationSpeed(parseFloat(e.target.value))}
+                          className="flex-1 accent-primary"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="col-span-full space-y-3">
+                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Background Image</Label>
+                    <div className="flex items-center gap-6">
+                      {backgroundImage ? (
+                        <div className="relative w-40 h-24 border-4 border-foreground group overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img 
+                            src={backgroundImage} 
+                            alt="Background" 
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            onClick={() => setBackgroundImage('')}
+                            className="absolute top-1 right-1 bg-destructive text-white p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex-1">
+                          <label className="flex flex-col items-center justify-center w-full h-32 border-4 border-dashed border-foreground bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer group">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <ImagePlus className="w-10 h-10 mb-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                              <p className="text-xs font-black uppercase italic">
+                                {isUploadingImage ? 'UPLOADING...' : 'CLICK TO UPLOAD BACKGROUND IMAGE'}
+                              </p>
+                            </div>
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              disabled={isUploadingImage}
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[10px] font-black uppercase text-muted-foreground ml-1">Works best with Marketing style, but can be applied to any style</p>
                   </div>
                 </div>
               </div>
@@ -692,18 +1166,49 @@ export default function NewFormPage() {
               <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
                 <h3 className="text-3xl font-black uppercase italic">Form Settings</h3>
                 <div className="space-y-6">
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     <Label className="font-black text-xl uppercase italic">Custom Slug</Label>
                     <div className="flex items-center gap-2">
                       <div className="px-4 py-2 border-4 border-foreground bg-muted font-bold">formora.com/f/</div>
-                      <Input 
-                        value={slug}
-                        onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-z-]/g, '-'))}
-                        placeholder="your-custom-slug"
-                        className="h-12 border-4 border-foreground bg-muted/30 text-xl font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
-                      />
+                      <div className="relative flex-1">
+                        <Input 
+                          value={slug}
+                          onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                          placeholder="your-custom-slug"
+                          className={`h-12 border-4 border-foreground bg-muted/30 text-xl font-black uppercase italic focus-visible:ring-0 transition-colors ${
+                            slugError 
+                              ? "border-destructive focus-visible:border-destructive" 
+                              : slug && !isSlugValidating 
+                                ? "border-green-500 focus-visible:border-green-500" 
+                                : "focus-visible:border-primary"
+                          }`}
+                        />
+                        {isSlugValidating && (
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          </div>
+                        )}
+                        {!isSlugValidating && slug && !slugError && (
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
+                            <CheckCircle2 className="w-5 h-5" />
+                          </div>
+                        )}
+                        {!isSlugValidating && slug && slugError && (
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-destructive">
+                            <AlertCircle className="w-5 h-5" />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-muted-foreground font-bold uppercase text-xs">Leave empty to use the form ID</p>
+                    {slugError ? (
+                      <p className="text-destructive font-black uppercase text-xs animate-in fade-in slide-in-from-top-1 ml-1">
+                        {slugError}
+                      </p>
+                    ) : (
+                      <p className="text-muted-foreground font-bold uppercase text-xs ml-1">
+                        Leave empty to use the form ID
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between p-6 border-4 border-foreground bg-muted/30">
