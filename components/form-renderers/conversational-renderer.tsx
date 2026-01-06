@@ -7,12 +7,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Form } from '@/lib/types';
+import { Form, Question } from '@/lib/types';
+import { FormWithLogic, ConditionalQuestion } from '@/lib/types-extended';
+import { evaluateLogicJumps, evaluateCalculations, shouldShowQuestion } from '@/lib/services/conditional-logic';
 import { ArrowLeft, ArrowRight, Check, CornerDownLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ConversationalRendererProps {
-  form: Form;
+  form: Form | FormWithLogic;
   onSubmit: (answers: Record<string, string | string[]>) => void;
 }
 
@@ -26,17 +28,41 @@ const fonts = {
 export function ConversationalRenderer({ form, onSubmit }: ConversationalRendererProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+  const [history, setHistory] = useState<number[]>([]); // To track the path taken for "back" button
   const [error, setError] = useState('');
 
-  const currentQuestion = form.questions[currentIndex];
-  const progress = ((currentIndex + 1) / form.questions.length) * 100;
-  const isLastQuestion = currentIndex === form.questions.length - 1;
+  const questions = (form as FormWithLogic).questions || form.questions;
+  const currentQuestion = questions[currentIndex] as ConditionalQuestion;
+  const progress = ((currentIndex + 1) / questions.length) * 100;
+  const isLastQuestion = currentIndex === questions.length - 1;
 
   const fontClass = fonts[form.fontFamily as keyof typeof fonts] || fonts.sans;
   const speed = form.animationSpeed || 0.4;
   const primaryColor = form.primaryColor || '#3b82f6';
   const backgroundColor = form.backgroundColor || '#ffffff';
   const textColor = form.textColor || '#000000';
+
+  // Handle calculations
+  useEffect(() => {
+    if ((form as FormWithLogic).calculations) {
+      const calculatedResults = evaluateCalculations((form as FormWithLogic).calculations!, answers);
+      
+      // Check if anything actually changed to avoid infinite loop
+      let changed = false;
+      const updatedAnswers = { ...answers };
+      
+      for (const [qId, value] of Object.entries(calculatedResults)) {
+        if (answers[qId] !== value) {
+          updatedAnswers[qId] = String(value);
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        setAnswers(updatedAnswers);
+      }
+    }
+  }, [answers, form]);
 
   const updateAnswer = (value: string | string[]) => {
     setAnswers({ ...answers, [currentQuestion.id]: value });
@@ -52,13 +78,47 @@ export function ConversationalRenderer({ form, onSubmit }: ConversationalRendere
 
     if (isLastQuestion) {
       onSubmit(answers);
-    } else {
-      setCurrentIndex(currentIndex + 1);
+      return;
     }
-  }, [currentQuestion, currentIndex, isLastQuestion, answers, onSubmit]);
+
+    // Logic Jumps
+    const jumpResult = evaluateLogicJumps(currentQuestion, answers);
+    
+    setHistory(prev => [...prev, currentIndex]);
+
+    if (jumpResult === 'end') {
+      onSubmit(answers);
+    } else if (jumpResult) {
+      const nextIdx = questions.findIndex(q => q.id === jumpResult);
+      if (nextIdx !== -1) {
+        setCurrentIndex(nextIdx);
+      } else {
+        // Fallback to next if jump ID not found
+        setCurrentIndex(currentIndex + 1);
+      }
+    } else {
+      // Normal next, but skip hidden questions
+      let nextIdx = currentIndex + 1;
+      while (nextIdx < questions.length) {
+        if (shouldShowQuestion(questions[nextIdx] as ConditionalQuestion, answers)) {
+          setCurrentIndex(nextIdx);
+          return;
+        }
+        nextIdx++;
+      }
+      
+      // If no more visible questions, submit
+      onSubmit(answers);
+    }
+  }, [currentQuestion, currentIndex, isLastQuestion, answers, onSubmit, questions]);
 
   const goPrev = () => {
-    if (currentIndex > 0) {
+    if (history.length > 0) {
+      const prevIdx = history[history.length - 1];
+      setHistory(prev => prev.slice(0, -1));
+      setCurrentIndex(prevIdx);
+      setError('');
+    } else if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setError('');
     }
@@ -212,7 +272,13 @@ export function ConversationalRenderer({ form, onSubmit }: ConversationalRendere
   };
 
   return (
-    <div className={cn("min-h-screen flex flex-col transition-colors duration-500", fontClass)} style={{ backgroundColor }}>
+    <div className={cn("min-h-screen flex flex-col transition-colors duration-500", fontClass)} style={{ 
+      backgroundColor,
+      backgroundImage: form.backgroundImage ? `url(${form.backgroundImage})` : undefined,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+    }}>
       {/* Progress */}
       <div className="fixed top-0 left-0 right-0 z-10">
         <Progress value={progress} className="h-2 rounded-none bg-black/5" style={{ color: primaryColor }} />

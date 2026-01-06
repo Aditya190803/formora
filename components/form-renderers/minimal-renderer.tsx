@@ -182,7 +182,13 @@ export function MinimalRenderer({ form, onSubmit }: MinimalRendererProps) {
   };
 
   return (
-    <div className={cn("min-h-screen transition-colors duration-500", fontClass)} style={{ backgroundColor }}>
+    <div className={cn("min-h-screen transition-colors duration-500", fontClass)} style={{ 
+      backgroundColor,
+      backgroundImage: form.backgroundImage ? `url(${form.backgroundImage})` : undefined,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+    }}>
       <div className="max-w-3xl mx-auto py-32 px-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}

@@ -242,7 +242,14 @@ export function NeoBrutalismRenderer({ form, onSubmit }: NeoBrutalismRendererPro
   return (
     <div 
       className={cn("min-h-screen p-4 md:p-12 transition-colors", fontClass)}
-      style={{ backgroundColor: backgroundColor, color: textColor }}
+      style={{ 
+        backgroundColor: backgroundColor, 
+        color: textColor,
+        backgroundImage: form.backgroundImage ? `url(${form.backgroundImage})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
     >
       <div className="max-w-3xl mx-auto">
         <header className="mb-16 text-center">
