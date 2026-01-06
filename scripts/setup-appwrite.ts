@@ -1,4 +1,4 @@
-import { Client, Databases, ID, Permission, Role, IndexType } from 'node-appwrite';
+import { Client, Databases, Storage, ID, Permission, Role, IndexType } from 'node-appwrite';
 import { config } from 'dotenv';
 import { resolve } from 'path';
 
@@ -33,94 +33,94 @@ client
   .setKey(APPWRITE_API_KEY);
 
 const databases = new Databases(client);
+const storage = new Storage(client);
 
 const DATABASE_NAME = 'formora';
 const FORMS_COLLECTION_NAME = 'forms';
 const RESPONSES_COLLECTION_NAME = 'responses';
+const IMAGES_BUCKET_NAME = 'images';
 
 async function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function createDatabase() {
-  console.log('\nCreating database...');
+  console.log('\nChecking for existing database...');
   
   try {
+    const dbList = await databases.list();
+    const existing = dbList.databases.find(db => db.name === DATABASE_NAME);
+    if (existing) {
+      console.log('Using existing database:', existing.$id);
+      return existing.$id;
+    }
+
+    console.log('Creating new database...');
     const database = await databases.create(ID.unique(), DATABASE_NAME);
     console.log('Database created:', database.$id);
     return database.$id;
   } catch (error) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 409) {
-      console.log('Database already exists, fetching...');
-      const dbList = await databases.list();
-      const existing = dbList.databases.find(db => db.name === DATABASE_NAME);
-      if (existing) {
-        console.log('Using existing database:', existing.$id);
-        return existing.$id;
-      }
-    }
     throw error;
   }
 }
 
 async function createFormsCollection(databaseId: string) {
-  console.log('\nCreating forms collection...');
+  console.log('\nChecking for existing forms collection...');
   
   let collectionId: string;
   
   try {
-    const collection = await databases.createCollection(
-      databaseId,
-      ID.unique(),
-      FORMS_COLLECTION_NAME,
-      [
-        Permission.create(Role.users()),
-        Permission.read(Role.any()),
-        Permission.update(Role.users()),
-        Permission.delete(Role.users()),
-      ]
-    );
-    collectionId = collection.$id;
-    console.log('Collection created:', collectionId);
-  } catch (error) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 409) {
-      console.log('Collection already exists, fetching...');
-      const colList = await databases.listCollections(databaseId);
-      const existing = colList.collections.find(col => col.name === FORMS_COLLECTION_NAME);
-      if (existing) {
-        collectionId = existing.$id;
-        console.log('Using existing collection:', collectionId);
-        return collectionId;
-      }
+    const colList = await databases.listCollections(databaseId);
+    const existing = colList.collections.find(col => col.name === FORMS_COLLECTION_NAME);
+    if (existing) {
+      console.log('Using existing collection:', existing.$id);
+      collectionId = existing.$id;
+    } else {
+      console.log('Creating new forms collection...');
+      const collection = await databases.createCollection(
+        databaseId,
+        ID.unique(),
+        FORMS_COLLECTION_NAME,
+        [
+          Permission.create(Role.users()),
+          Permission.read(Role.any()),
+          Permission.update(Role.users()),
+          Permission.delete(Role.users()),
+        ]
+      );
+      collectionId = collection.$id;
+      console.log('Collection created:', collectionId);
     }
+  } catch (error) {
     throw error;
   }
 
-  console.log('Creating attributes...');
+  console.log('Checking and creating attributes...');
 
-  await databases.createStringAttribute(databaseId, collectionId, 'userId', 255, true);
-  await sleep(1500);
-  
-  await databases.createStringAttribute(databaseId, collectionId, 'title', 255, true);
-  await sleep(1500);
-  
-  await databases.createStringAttribute(databaseId, collectionId, 'description', 1000, false, '');
-  await sleep(1500);
-  
-  await databases.createEnumAttribute(databaseId, collectionId, 'style', ['classic', 'conversational', 'marketing', 'neo_brutalism', 'minimal'], true, 'conversational');
-  await sleep(1500);
-  
-  await databases.createStringAttribute(databaseId, collectionId, 'questions', 100000, true);
-  await sleep(1500);
-  
-  await databases.createBooleanAttribute(databaseId, collectionId, 'isPublished', true, false);
-  await sleep(1500);
-  
-  await databases.createStringAttribute(databaseId, collectionId, 'createdAt', 30, true);
-  await sleep(1500);
-  
-  await databases.createStringAttribute(databaseId, collectionId, 'updatedAt', 30, true);
-  await sleep(1500);
+  const attributes = [
+    { name: 'userId', create: () => databases.createStringAttribute(databaseId, collectionId, 'userId', 255, true) },
+    { name: 'title', create: () => databases.createStringAttribute(databaseId, collectionId, 'title', 255, true) },
+    { name: 'description', create: () => databases.createStringAttribute(databaseId, collectionId, 'description', 1000, false, '') },
+    { name: 'style', create: () => databases.createEnumAttribute(databaseId, collectionId, 'style', ['classic', 'conversational', 'marketing', 'neo_brutalism', 'minimal'], false, 'conversational') },
+    { name: 'questions', create: () => databases.createStringAttribute(databaseId, collectionId, 'questions', 100000, true) },
+    { name: 'isPublished', create: () => databases.createBooleanAttribute(databaseId, collectionId, 'isPublished', false, false) },
+    { name: 'createdAt', create: () => databases.createStringAttribute(databaseId, collectionId, 'createdAt', 30, true) },
+    { name: 'updatedAt', create: () => databases.createStringAttribute(databaseId, collectionId, 'updatedAt', 30, true) },
+  ];
+
+  for (const attr of attributes) {
+    try {
+      console.log(`Creating ${attr.name} attribute...`);
+      await attr.create();
+      await sleep(1500);
+    } catch (e) {
+      if (e && typeof e === 'object' && 'code' in e && e.code === 409) {
+        console.log(`${attr.name} attribute already exists`);
+      } else {
+        throw e;
+      }
+    }
+  }
 
   try {
     console.log('Creating primaryColor attribute...');
@@ -214,77 +214,141 @@ async function createFormsCollection(databaseId: string) {
   
   await sleep(2000);
 
-  console.log('Creating indexes...');
+  console.log('Checking and creating indexes...');
   
-  await databases.createIndex(databaseId, collectionId, 'userId_idx', IndexType.Key, ['userId']);
-  await sleep(1500);
-  
-  await databases.createIndex(databaseId, collectionId, 'createdAt_idx', IndexType.Key, ['createdAt']);
-  await sleep(1500);
+  const indexes = [
+    { name: 'userId_idx', fields: ['userId'], type: IndexType.Key },
+    { name: 'createdAt_idx', fields: ['createdAt'], type: IndexType.Key },
+    { name: 'slug_idx', fields: ['slug'], type: IndexType.Unique },
+  ];
 
-  await databases.createIndex(databaseId, collectionId, 'slug_idx', IndexType.Unique, ['slug']);
-  await sleep(1500);
+  for (const idx of indexes) {
+    try {
+      console.log(`Creating ${idx.name} index...`);
+      await databases.createIndex(databaseId, collectionId, idx.name, idx.type, idx.fields);
+      await sleep(1500);
+    } catch (e) {
+      if (e && typeof e === 'object' && 'code' in e && e.code === 409) {
+        console.log(`${idx.name} index already exists`);
+      } else {
+        throw e;
+      }
+    }
+  }
 
   console.log('Forms collection setup complete');
   return collectionId;
 }
 
 async function createResponsesCollection(databaseId: string) {
-  console.log('\nCreating responses collection...');
+  console.log('\nChecking for existing responses collection...');
   
   let collectionId: string;
   
   try {
-    const collection = await databases.createCollection(
-      databaseId,
-      ID.unique(),
-      RESPONSES_COLLECTION_NAME,
-      [
-        Permission.create(Role.any()),
-        Permission.read(Role.users()),
-        Permission.delete(Role.users()),
-      ]
-    );
-    collectionId = collection.$id;
-    console.log('Collection created:', collectionId);
-  } catch (error) {
-    if (error && typeof error === 'object' && 'code' in error && error.code === 409) {
-      console.log('Collection already exists, fetching...');
-      const colList = await databases.listCollections(databaseId);
-      const existing = colList.collections.find(col => col.name === RESPONSES_COLLECTION_NAME);
-      if (existing) {
-        collectionId = existing.$id;
-        console.log('Using existing collection:', collectionId);
-        return collectionId;
-      }
+    const colList = await databases.listCollections(databaseId);
+    const existing = colList.collections.find(col => col.name === RESPONSES_COLLECTION_NAME);
+    if (existing) {
+      console.log('Using existing collection:', existing.$id);
+      collectionId = existing.$id;
+    } else {
+      console.log('Creating new responses collection...');
+      const collection = await databases.createCollection(
+        databaseId,
+        ID.unique(),
+        RESPONSES_COLLECTION_NAME,
+        [
+          Permission.create(Role.any()),
+          Permission.read(Role.users()),
+          Permission.delete(Role.users()),
+        ]
+      );
+      collectionId = collection.$id;
+      console.log('Collection created:', collectionId);
     }
+  } catch (error) {
     throw error;
   }
 
-  console.log('Creating attributes...');
+  console.log('Checking and creating attributes...');
 
-  await databases.createStringAttribute(databaseId, collectionId, 'formId', 255, true);
-  await sleep(1500);
-  
-  await databases.createStringAttribute(databaseId, collectionId, 'answers', 100000, true);
-  await sleep(1500);
+  const attributes = [
+    { name: 'formId', create: () => databases.createStringAttribute(databaseId, collectionId, 'formId', 255, true) },
+    { name: 'answers', create: () => databases.createStringAttribute(databaseId, collectionId, 'answers', 100000, true) },
+    { name: 'ipAddress', create: () => databases.createStringAttribute(databaseId, collectionId, 'ipAddress', 255, false) },
+    { name: 'submittedAt', create: () => databases.createStringAttribute(databaseId, collectionId, 'submittedAt', 30, true) },
+  ];
 
-  await databases.createStringAttribute(databaseId, collectionId, 'ipAddress', 255, false);
-  await sleep(1500);
-  
-  await databases.createStringAttribute(databaseId, collectionId, 'submittedAt', 30, true);
-  await sleep(2000);
+  for (const attr of attributes) {
+    try {
+      console.log(`Creating ${attr.name} attribute...`);
+      await attr.create();
+      await sleep(1500);
+    } catch (e) {
+      if (e && typeof e === 'object' && 'code' in e && e.code === 409) {
+        console.log(`${attr.name} attribute already exists`);
+      } else {
+        throw e;
+      }
+    }
+  }
 
-  console.log('Creating indexes...');
+  console.log('Checking and creating indexes...');
   
-  await databases.createIndex(databaseId, collectionId, 'formId_idx', IndexType.Key, ['formId']);
-  await sleep(1500);
-  
-  await databases.createIndex(databaseId, collectionId, 'submittedAt_idx', IndexType.Key, ['submittedAt']);
-  await sleep(1500);
+  const indexes = [
+    { name: 'formId_idx', fields: ['formId'], type: IndexType.Key },
+    { name: 'submittedAt_idx', fields: ['submittedAt'], type: IndexType.Key },
+  ];
+
+  for (const idx of indexes) {
+    try {
+      console.log(`Creating ${idx.name} index...`);
+      await databases.createIndex(databaseId, collectionId, idx.name, idx.type, idx.fields);
+      await sleep(1500);
+    } catch (e) {
+      if (e && typeof e === 'object' && 'code' in e && e.code === 409) {
+        console.log(`${idx.name} index already exists`);
+      } else {
+        throw e;
+      }
+    }
+  }
 
   console.log('Responses collection setup complete');
   return collectionId;
+}
+
+async function createImagesBucket() {
+  console.log('\nChecking for existing images bucket...');
+  
+  try {
+    const bucketList = await storage.listBuckets();
+    const existing = bucketList.buckets.find(b => b.name === IMAGES_BUCKET_NAME);
+    if (existing) {
+      console.log('Using existing bucket:', existing.$id);
+      return existing.$id;
+    }
+
+    console.log('Creating new images bucket...');
+    const bucket = await storage.createBucket(
+      ID.unique(),
+      IMAGES_BUCKET_NAME,
+      [
+        Permission.read(Role.any()),
+        Permission.create(Role.users()),
+        Permission.update(Role.users()),
+        Permission.delete(Role.users()),
+      ],
+      false, // fileSecurity
+      true,  // enabled
+      undefined, // maximumFileSize
+      ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'], // allowedFileExtensions
+    );
+    console.log('Bucket created:', bucket.$id);
+    return bucket.$id;
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function main() {
@@ -297,6 +361,7 @@ async function main() {
     const databaseId = await createDatabase();
     const formsCollectionId = await createFormsCollection(databaseId);
     const responsesCollectionId = await createResponsesCollection(databaseId);
+    const imagesBucketId = await createImagesBucket();
 
     console.log('\n================================');
     console.log('Setup complete!');
@@ -305,6 +370,7 @@ async function main() {
     console.log(`NEXT_PUBLIC_APPWRITE_DATABASE_ID=${databaseId}`);
     console.log(`NEXT_PUBLIC_APPWRITE_FORMS_COLLECTION_ID=${formsCollectionId}`);
     console.log(`NEXT_PUBLIC_APPWRITE_RESPONSES_COLLECTION_ID=${responsesCollectionId}`);
+    console.log(`NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID=${imagesBucketId}`);
     console.log('');
 
   } catch (error) {

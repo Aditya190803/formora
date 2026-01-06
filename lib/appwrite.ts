@@ -1,4 +1,4 @@
-import { Client, Databases, Account, ID, Query } from 'appwrite';
+import { Client, Databases, Account, ID, Query, Storage } from 'appwrite';
 import { Form, FormResponse, Question } from './types';
 
 const client = new Client();
@@ -14,14 +14,22 @@ if (PROJECT_ID) {
 
 export const account = new Account(client);
 export const databases = new Databases(client);
+export const storage = new Storage(client);
 
 export const DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID || '';
 export const FORMS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_FORMS_COLLECTION_ID || '';
 export const RESPONSES_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_RESPONSES_COLLECTION_ID || '';
+export const IMAGES_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID || '';
 
 // Check if Appwrite is configured
 export const isAppwriteConfigured = () => {
-  return Boolean(PROJECT_ID && DATABASE_ID && FORMS_COLLECTION_ID && RESPONSES_COLLECTION_ID);
+  return Boolean(
+    PROJECT_ID && 
+    DATABASE_ID && 
+    FORMS_COLLECTION_ID && 
+    RESPONSES_COLLECTION_ID && 
+    IMAGES_BUCKET_ID
+  );
 };
 
 export { client, ID, Query };
@@ -77,6 +85,11 @@ export const formsService = {
         isPublished: data.isPublished,
         collaborators: data.collaborators || [],
         primaryColor: data.primaryColor || '#3b82f6',
+        backgroundColor: data.backgroundColor || '#ffffff',
+        textColor: data.textColor || '#000000',
+        fontFamily: data.fontFamily || 'sans',
+        backgroundImage: data.backgroundImage || '',
+        animationSpeed: data.animationSpeed || 0.4,
         buttonText: data.buttonText || 'Submit',
         slug: data.slug || '',
         limitOneResponse: data.limitOneResponse || false,
@@ -89,6 +102,11 @@ export const formsService = {
       questions: JSON.parse(document.questions as string) as Question[],
       collaborators: document.collaborators as string[],
       primaryColor: document.primaryColor as string,
+      backgroundColor: document.backgroundColor as string,
+      textColor: document.textColor as string,
+      fontFamily: document.fontFamily as string,
+      backgroundImage: document.backgroundImage as string,
+      animationSpeed: document.animationSpeed as number,
       buttonText: document.buttonText as string,
       slug: document.slug as string,
       limitOneResponse: document.limitOneResponse as boolean,
@@ -116,8 +134,11 @@ export const formsService = {
       ...doc,
       questions: JSON.parse(doc.questions as string) as Question[],
       collaborators: doc.collaborators as string[],
-      primaryColor: doc.primaryColor as string,
-      buttonText: doc.buttonText as string,
+      primaryColor: doc.primaryColor as string,      backgroundColor: doc.backgroundColor as string,
+      textColor: doc.textColor as string,
+      fontFamily: doc.fontFamily as string,
+      backgroundImage: doc.backgroundImage as string,
+      animationSpeed: doc.animationSpeed as number,      buttonText: doc.buttonText as string,
       slug: doc.slug as string,
       limitOneResponse: doc.limitOneResponse as boolean,
     })) as unknown as Form[];
@@ -139,6 +160,11 @@ export const formsService = {
         questions: JSON.parse(document.questions as string) as Question[],
         collaborators: document.collaborators as string[],
         primaryColor: document.primaryColor as string,
+        backgroundColor: document.backgroundColor as string,
+        textColor: document.textColor as string,
+        fontFamily: document.fontFamily as string,
+        backgroundImage: document.backgroundImage as string,
+        animationSpeed: document.animationSpeed as number,
         buttonText: document.buttonText as string,
         slug: document.slug as string,
         limitOneResponse: document.limitOneResponse as boolean,
@@ -170,6 +196,11 @@ export const formsService = {
         questions: JSON.parse(doc.questions as string) as Question[],
         collaborators: doc.collaborators as string[],
         primaryColor: doc.primaryColor as string,
+        backgroundColor: doc.backgroundColor as string,
+        textColor: doc.textColor as string,
+        fontFamily: doc.fontFamily as string,
+        backgroundImage: doc.backgroundImage as string,
+        animationSpeed: doc.animationSpeed as number,
         buttonText: doc.buttonText as string,
         slug: doc.slug as string,
         limitOneResponse: doc.limitOneResponse as boolean,
@@ -195,6 +226,11 @@ export const formsService = {
     if (data.isPublished !== undefined) updateData.isPublished = data.isPublished;
     if (data.collaborators !== undefined) updateData.collaborators = data.collaborators;
     if (data.primaryColor !== undefined) updateData.primaryColor = data.primaryColor;
+    if (data.backgroundColor !== undefined) updateData.backgroundColor = data.backgroundColor;
+    if (data.textColor !== undefined) updateData.textColor = data.textColor;
+    if (data.fontFamily !== undefined) updateData.fontFamily = data.fontFamily;
+    if (data.backgroundImage !== undefined) updateData.backgroundImage = data.backgroundImage;
+    if (data.animationSpeed !== undefined) updateData.animationSpeed = data.animationSpeed;
     if (data.buttonText !== undefined) updateData.buttonText = data.buttonText;
     if (data.slug !== undefined) updateData.slug = data.slug;
     if (data.limitOneResponse !== undefined) updateData.limitOneResponse = data.limitOneResponse;
@@ -210,6 +246,11 @@ export const formsService = {
       questions: JSON.parse(document.questions as string) as Question[],
       collaborators: document.collaborators as string[],
       primaryColor: document.primaryColor as string,
+      backgroundColor: document.backgroundColor as string,
+      textColor: document.textColor as string,
+      fontFamily: document.fontFamily as string,
+      backgroundImage: document.backgroundImage as string,
+      animationSpeed: document.animationSpeed as number,
       buttonText: document.buttonText as string,
       slug: document.slug as string,
       limitOneResponse: document.limitOneResponse as boolean,
@@ -308,4 +349,41 @@ export const responsesService = {
     const responses = await this.listByForm(formId);
     await Promise.all(responses.map(r => this.delete(r.$id!)));
   },
+};
+
+// ============================================
+// STORAGE SERVICE
+// ============================================
+
+export const storageService = {
+  // Upload a file
+  async uploadFile(file: File): Promise<string> {
+    if (!isAppwriteConfigured() || !IMAGES_BUCKET_ID) {
+      throw new Error('Appwrite Storage is not configured. Please add your bucket ID to .env.local');
+    }
+
+    try {
+      const result = await storage.createFile(
+        IMAGES_BUCKET_ID,
+        ID.unique(),
+        file
+      );
+      
+      // Return the view URL for the file
+      return storage.getFileView(IMAGES_BUCKET_ID, result.$id).toString();
+    } catch (error) {
+      console.error('Failed to upload file:', error);
+      throw error;
+    }
+  },
+
+  // Delete a file
+  async deleteFile(fileId: string): Promise<void> {
+    if (!isAppwriteConfigured() || !IMAGES_BUCKET_ID) return;
+    try {
+      await storage.deleteFile(IMAGES_BUCKET_ID, fileId);
+    } catch (error) {
+      console.error('Failed to delete file:', error);
+    }
+  }
 };

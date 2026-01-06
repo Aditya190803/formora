@@ -3,7 +3,7 @@
  * Handles form logic with conditional questions and skip logic
  */
 
-import { Condition, ConditionalQuestion, ConditionOperator } from '@/lib/types-extended';
+import { Condition, Question as ConditionalQuestion, ConditionOperator, LogicJump, CalculationRule } from '@/lib/types';
 
 export function evaluateCondition(
   condition: Condition,
@@ -49,6 +49,73 @@ export function shouldShowQuestion(
   
   // Use AND logic (showWhenAll = true) or OR logic (showWhenAll = false)
   return question.showWhenAll ? results.every(r => r) : results.some(r => r);
+}
+
+/**
+ * Evaluates logic jumps for a question based on current answers
+ * Returns the destination question ID or 'end' if a jump condition is met, null otherwise
+ */
+export function evaluateLogicJumps(
+  question: ConditionalQuestion,
+  answers: Record<string, string | string[]>
+): string | 'end' | null {
+  if (!question.logicJumps || question.logicJumps.length === 0) {
+    return null;
+  }
+
+  for (const jump of question.logicJumps) {
+    const results = jump.conditions.map(condition => evaluateCondition(condition, answers));
+    const isMet = jump.showWhenAll ? results.every(r => r) : results.some(r => r);
+
+    if (isMet) {
+      return jump.action === 'end' ? 'end' : jump.destinationQuestionId || null;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Calculates values for fields based on calculation rules
+ */
+export function evaluateCalculations(
+  calculations: CalculationRule[],
+  answers: Record<string, string | string[]>
+): Record<string, string | number> {
+  const newAnswers: Record<string, string | number> = {};
+
+  for (const calc of calculations) {
+    let formula = calc.formula;
+    
+    // Replace placeholders like {{questionId}} with values
+    const placeholders = formula.match(/\{\{([^}]+)\}\}/g) || [];
+    let canEvaluate = true;
+
+    for (const placeholder of placeholders) {
+      const qId = placeholder.slice(2, -2);
+      const val = answers[qId];
+      
+      if (val === undefined || val === null || val === '') {
+        canEvaluate = false;
+        break;
+      }
+      
+      formula = formula.replace(placeholder, String(val));
+    }
+
+    if (canEvaluate) {
+      try {
+        // Basic safe evaluation (only allow simple math)
+        // In a real app, use a proper expression parser library
+        const result = eval(formula.replace(/[^0-9+\-*/(). ]/g, ''));
+        newAnswers[calc.targetQuestionId] = result;
+      } catch (e) {
+        console.error('Calculation error:', e);
+      }
+    }
+  }
+
+  return newAnswers;
 }
 
 export function getVisibleQuestions(

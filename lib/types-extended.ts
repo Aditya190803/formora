@@ -16,11 +16,27 @@ export interface Condition {
 export interface ConditionalQuestion extends Question {
   conditions?: Condition[];
   showWhenAll?: boolean; // true = AND logic, false = OR logic
+  logicJumps?: LogicJump[];
+}
+
+export interface LogicJump {
+  id: string;
+  conditions: Condition[];
+  showWhenAll?: boolean;
+  action: 'jump' | 'end';
+  destinationQuestionId?: string; // If action is jump
+}
+
+export interface CalculationRule {
+  id: string;
+  formula: string; // e.g., "{{q1}} + {{q2}} * 0.1"
+  targetQuestionId: string;
 }
 
 export interface FormWithLogic extends Form {
   questions: ConditionalQuestion[];
   enableLogic?: boolean;
+  calculations?: CalculationRule[];
 }
 
 // ============================================

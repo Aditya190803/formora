@@ -14,6 +14,29 @@ export interface QuestionOption {
   label: string;
 }
 
+export type ConditionOperator = 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than';
+
+export interface Condition {
+  id: string;
+  questionId: string;
+  operator: ConditionOperator;
+  value: string | number;
+}
+
+export interface LogicJump {
+  id: string;
+  conditions: Condition[];
+  showWhenAll?: boolean;
+  action: 'jump' | 'end';
+  destinationQuestionId?: string;
+}
+
+export interface CalculationRule {
+  id: string;
+  formula: string;
+  targetQuestionId: string;
+}
+
 export interface Question {
   id: string;
   type: QuestionType;
@@ -22,6 +45,11 @@ export interface Question {
   placeholder?: string;
   required: boolean;
   options?: QuestionOption[];
+  // Logic fields
+  conditions?: Condition[];
+  showWhenAll?: boolean;
+  logicJumps?: LogicJump[];
+  calculations?: CalculationRule[];
 }
 
 export interface Form {
@@ -32,16 +60,17 @@ export interface Form {
   style: FormStyle;
   questions: Question[];
   isPublished: boolean;
-  collaborators?: string[]; // Array of user IDs or emails
+  collaborators?: string[]; 
   primaryColor?: string;
   buttonText?: string;
-  slug?: string; // Custom URL slug for the form
-  limitOneResponse?: boolean; // Whether to limit to one response per user
+  slug?: string; 
+  limitOneResponse?: boolean; 
   fontFamily?: string;
   backgroundColor?: string;
   textColor?: string;
   backgroundImage?: string;
   animationSpeed?: number;
+  calculations?: CalculationRule[]; // Global calculations
   createdAt?: string;
   updatedAt?: string;
 }
