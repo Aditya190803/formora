@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Question, Form } from '@/lib/types';
-import { ArrowRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MinimalRendererProps {
@@ -11,21 +10,13 @@ interface MinimalRendererProps {
   onSubmit: (answers: Record<string, string | string[]>) => void;
 }
 
-const fonts = {
-  sans: 'font-sans',
-  serif: 'font-serif',
-  mono: 'font-mono',
-  heading: 'font-black tracking-tighter uppercase italic',
-};
-
 export function MinimalRenderer({ form, onSubmit }: MinimalRendererProps) {
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const fontClass = fonts[form.fontFamily as keyof typeof fonts] || fonts.sans;
-  const primaryColor = form.primaryColor || '#000000';
-  const backgroundColor = form.backgroundColor || '#fafafa';
-  const textColor = form.textColor || '#1a1a1a';
+  const primaryColor = form.primaryColor || 'var(--accent)';
+  const backgroundColor = form.backgroundColor || 'var(--bg)';
+  const textColor = form.textColor || 'var(--ink)';
 
   const updateAnswer = (questionId: string, value: string | string[]) => {
     setAnswers({ ...answers, [questionId]: value });
@@ -42,7 +33,7 @@ export function MinimalRenderer({ form, onSubmit }: MinimalRendererProps) {
     const newErrors: Record<string, string> = {};
     form.questions.forEach((q) => {
       if (q.required && (!answers[q.id] || (Array.isArray(answers[q.id]) && (answers[q.id] as string[]).length === 0))) {
-        newErrors[q.id] = 'Required';
+        newErrors[q.id] = 'This field is required';
       }
     });
 
@@ -58,8 +49,9 @@ export function MinimalRenderer({ form, onSubmit }: MinimalRendererProps) {
     const error = errors[question.id];
 
     const inputClasses = cn(
-      "w-full text-xl border-0 border-b border-gray-200 bg-transparent py-4 focus:outline-none transition-all duration-300 placeholder:text-gray-300",
-      error ? 'border-red-500' : ''
+      "w-full text-2xl md:text-4xl border-0 border-b border-muted bg-transparent py-4 focus:outline-none transition-all duration-700 placeholder:text-muted-foreground/30",
+      "font-body tracking-tight",
+      error ? 'border-danger/50' : 'focus:border-ink'
     );
 
     switch (question.type) {
@@ -68,23 +60,23 @@ export function MinimalRenderer({ form, onSubmit }: MinimalRendererProps) {
         return (
           <input
             type={question.type === 'email' ? 'email' : 'text'}
-            placeholder={question.placeholder || 'Type your answer...'}
+            placeholder={question.placeholder || 'Type here...'}
             value={(answers[question.id] as string) || ''}
             onChange={(e) => updateAnswer(question.id, e.target.value)}
             className={inputClasses}
-            style={{ borderColor: error ? undefined : 'rgba(0,0,0,0.1)', color: textColor }}
+            style={{ color: textColor }}
           />
         );
 
       case 'long_text':
         return (
           <textarea
-            placeholder={question.placeholder || 'Type your answer...'}
+            placeholder={question.placeholder || 'Type here...'}
             value={(answers[question.id] as string) || ''}
             onChange={(e) => updateAnswer(question.id, e.target.value)}
             rows={1}
             className={cn(inputClasses, "resize-none overflow-hidden")}
-            style={{ borderColor: error ? undefined : 'rgba(0,0,0,0.1)', color: textColor }}
+            style={{ color: textColor }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
               target.style.height = 'auto';
@@ -101,79 +93,30 @@ export function MinimalRenderer({ form, onSubmit }: MinimalRendererProps) {
             value={(answers[question.id] as string) || ''}
             onChange={(e) => updateAnswer(question.id, e.target.value)}
             className={inputClasses}
-            style={{ borderColor: error ? undefined : 'rgba(0,0,0,0.1)', color: textColor }}
+            style={{ color: textColor }}
           />
         );
 
       case 'multiple_choice':
         return (
-          <div className="space-y-3 pt-2">
+          <div className="flex flex-wrap gap-4 pt-4">
             {question.options?.map((option) => (
               <button
                 key={option.id}
                 type="button"
                 onClick={() => updateAnswer(question.id, option.label)}
                 className={cn(
-                  "w-full text-left px-6 py-4 border-2 transition-all duration-200 rounded-xl",
+                  "text-lg md:text-xl px-0 py-2 border-0 border-b-2 transition-all duration-500 font-body",
                   answers[question.id] === option.label
-                    ? "border-black bg-black text-white"
-                    : "border-gray-100 hover:border-gray-300 text-gray-600"
+                    ? "border-ink opacity-100"
+                    : "border-transparent opacity-40 hover:opacity-100"
                 )}
-                style={answers[question.id] === option.label ? { backgroundColor: primaryColor, borderColor: primaryColor } : { color: textColor }}
+                style={{ color: textColor }}
               >
                 {option.label}
               </button>
             ))}
           </div>
-        );
-
-      case 'checkboxes':
-        const currentAnswers = (answers[question.id] as string[]) || [];
-        return (
-          <div className="space-y-3 pt-2">
-            {question.options?.map((option) => {
-              const isChecked = currentAnswers.includes(option.label);
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => {
-                    const newValue = isChecked
-                      ? currentAnswers.filter((a) => a !== option.label)
-                      : [...currentAnswers, option.label];
-                    updateAnswer(question.id, newValue);
-                  }}
-                  className={cn(
-                    "w-full text-left px-6 py-4 border-2 transition-all duration-200 flex items-center justify-between rounded-xl",
-                    isChecked
-                      ? "border-black bg-black text-white"
-                      : "border-gray-100 hover:border-gray-300 text-gray-600"
-                  )}
-                  style={isChecked ? { backgroundColor: primaryColor, borderColor: primaryColor } : { color: textColor }}
-                >
-                  {option.label}
-                  {isChecked && <Check className="w-5 h-5 stroke-[3]" />}
-                </button>
-              );
-            })}
-          </div>
-        );
-
-      case 'dropdown':
-        return (
-          <select
-            value={(answers[question.id] as string) || ''}
-            onChange={(e) => updateAnswer(question.id, e.target.value)}
-            className={inputClasses}
-            style={{ borderColor: error ? undefined : 'rgba(0,0,0,0.1)', color: textColor }}
-          >
-            <option value="" disabled>{question.placeholder || 'Select an option'}</option>
-            {question.options?.map((option) => (
-              <option key={option.id} value={option.label}>
-                {option.label}
-              </option>
-            ))}
-          </select>
         );
 
       default:
@@ -182,90 +125,93 @@ export function MinimalRenderer({ form, onSubmit }: MinimalRendererProps) {
   };
 
   return (
-    <div className={cn("min-h-screen transition-colors duration-500", fontClass)} style={{ 
+    <div className="min-h-screen bg-bg selection:bg-accent/20" style={{ 
       backgroundColor,
-      backgroundImage: form.backgroundImage ? `url(${form.backgroundImage})` : undefined,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
+      color: textColor
     }}>
-      <div className="max-w-3xl mx-auto py-32 px-10">
+      <div className="max-w-4xl mx-auto pt-40 pb-60 px-6 md:px-10">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-40"
         >
-          <h1 className="text-5xl font-medium tracking-tight mb-6" style={{ color: textColor }}>{form.title}</h1>
+          <h1 className="text-5xl md:text-8xl font-display font-normal leading-[0.9] tracking-tight mb-8">
+            {form.title}
+          </h1>
           {form.description && (
-            <p className="text-xl mb-24 font-light leading-relaxed max-w-xl opacity-60" style={{ color: textColor }}>{form.description}</p>
+            <p className="text-lg md:text-2xl font-body max-w-2xl opacity-50 leading-relaxed">
+              {form.description}
+            </p>
           )}
         </motion.div>
 
-        <form onSubmit={handleSubmit} className="space-y-32">
+        <form onSubmit={handleSubmit} className="space-y-40">
           {form.questions.map((question, index) => (
             <motion.div
               key={question.id}
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-              className="group relative"
+              viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
+              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+              className="group"
             >
-              <div className="flex flex-col gap-6">
-                <div className="flex items-center gap-4">
-                  <span className="text-[10px] font-medium tracking-widest uppercase opacity-40" style={{ color: textColor }}>
-                    Question {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <div className="h-[1px] w-8 bg-current opacity-10 group-focus-within:w-12 group-focus-within:opacity-100 transition-all duration-500" style={{ color: primaryColor }} />
-                </div>
-                
+              <div className="flex flex-col gap-8">
                 <div className="space-y-4">
-                  <label className="text-3xl font-normal block leading-tight" style={{ color: textColor }}>
-                    {question.title}
-                    {question.required && <span className="ml-2 text-red-400 text-sm font-light">*</span>}
-                  </label>
+                  <div className="flex items-baseline gap-4">
+                    <span className="font-body text-xs opacity-30 mt-1">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <label className="text-3xl md:text-5xl font-display font-normal leading-tight">
+                      {question.title}
+                    </label>
+                  </div>
                   {question.description && (
-                    <p className="text-base font-light max-w-lg opacity-50" style={{ color: textColor }}>{question.description}</p>
+                    <p className="text-base md:text-lg font-body max-w-xl opacity-40 pl-8">
+                      {question.description}
+                    </p>
                   )}
                 </div>
 
-                <div className="mt-4 relative">
+                <div className="pl-8 relative">
                   {renderQuestion(question)}
-                  {errors[question.id] && (
-                    <motion.p 
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="text-xs text-red-500 mt-4 font-medium uppercase tracking-wider"
-                    >
-                      {errors[question.id]}
-                    </motion.p>
-                  )}
+                  <AnimatePresence>
+                    {errors[question.id] && (
+                      <motion.p 
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        className="absolute -bottom-8 left-8 text-xs text-danger font-body uppercase tracking-widest"
+                      >
+                        {errors[question.id]}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </motion.div>
           ))}
 
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="pt-12"
+            className="pt-20 pl-8"
           >
             <button
               type="submit"
-              className="group relative inline-flex items-center gap-4 text-white px-10 py-5 rounded-full text-lg font-medium transition-all duration-300 hover:gap-6 active:scale-95 shadow-xl hover:shadow-2xl"
-              style={{ backgroundColor: primaryColor }}
+              className="text-2xl md:text-4xl font-display group flex items-center gap-4 transition-all duration-500 hover:gap-8"
             >
-              {form.buttonText || 'Submit Response'}
-              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              <span className="border-b-2 border-ink py-1">
+                {form.buttonText || 'Submit response'}
+              </span>
+              <span className="text-accent opacity-0 group-hover:opacity-100 transition-opacity duration-500">→</span>
             </button>
           </motion.div>
         </form>
 
-        <footer className="mt-48 pt-12 border-t border-current opacity-10 flex justify-between items-center" style={{ color: textColor }}>
-          <div className="text-[10px] uppercase tracking-[0.3em] font-medium">
-            Powered by <span className="font-bold">Formora</span>
-          </div>
+        <footer className="mt-80 opacity-20 font-body text-[10px] uppercase tracking-[0.4em]">
+          Formora / Experience-First
         </footer>
       </div>
     </div>
