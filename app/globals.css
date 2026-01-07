@@ -65,39 +65,47 @@ input[type=number] {
   --animate-shiny-text: shiny-text 8s ease infinite;
 }
 
-/* Formora Theme - Premium High Contrast */
+/* Formora Design System - Core Variables */
 :root {
-  --radius: 1rem;
-  --background: oklch(0.98 0.005 280);
-  --foreground: oklch(0.1 0.02 280);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.1 0.02 280);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.1 0.02 280);
-  --primary: oklch(0.45 0.2 280);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.92 0.02 280);
-  --secondary-foreground: oklch(0.2 0.05 280);
-  --muted: oklch(0.94 0.01 280);
-  --muted-foreground: oklch(0.4 0.02 280);
-  --accent: oklch(0.9 0.04 280);
-  --accent-foreground: oklch(0.2 0.05 280);
-  --destructive: oklch(0.5 0.2 25);
-  --border: oklch(0.85 0.02 280);
-  --input: oklch(0.85 0.02 280);
-  --ring: oklch(0.45 0.2 280);
-  --chart-1: oklch(0.45 0.2 280);
-  --chart-2: oklch(0.55 0.15 320);
-  --chart-3: oklch(0.5 0.15 250);
-  --chart-4: oklch(0.6 0.12 200);
-  --chart-5: oklch(0.65 0.15 340);
-  --sidebar: oklch(0.97 0.01 280);
-  --sidebar-foreground: oklch(0.1 0.02 280);
-  --sidebar-primary: oklch(0.45 0.2 280);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.92 0.03 280);
-  --sidebar-accent-foreground: oklch(0.2 0.05 280);
-  --sidebar-border: oklch(0.85 0.02 280);
+  --radius: 0rem; /* Hard edges by default, can be overridden */
+  --bg: oklch(0.99 0.002 0);
+  --ink: oklch(0.1 0 0);
+  --muted: oklch(0.92 0.005 0);
+  --accent: oklch(0.5 0.15 260); /* Deep blue-ish accent */
+  --danger: oklch(0.6 0.18 25);
+
+  /* Mapping to Tailwind/Shadcn defaults */
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card: var(--bg);
+  --card-foreground: var(--ink);
+  --popover: var(--bg);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--bg);
+  --secondary: var(--muted);
+  --secondary-foreground: var(--ink);
+  --muted: var(--muted);
+  --muted-foreground: oklch(0.4 0 0);
+  --accent: var(--accent);
+  --accent-foreground: var(--bg);
+  --destructive: var(--danger);
+  --border: oklch(0.9 0 0);
+  --input: oklch(0.9 0 0);
+  --ring: var(--accent);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+
+  --font-display: "PP Editorial New", "Canela", "Georgia", serif;
+  --font-heading: "Neue Montreal", "Inter", sans-serif;
+  --font-body: "Söhne", "General Sans", "Inter", sans-serif;
+  --font-logic: "IBM Plex Sans", monospace;
   --sidebar-ring: oklch(0.45 0.2 280);
 }
 

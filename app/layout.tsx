@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { StackProvider, StackTheme } from "@stackframe/stack";
 import { stackClientApp } from "../stack/client";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, IBM_Plex_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -15,10 +15,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const ibmPlexSans = IBM_Plex_Sans({
+  weight: ["300", "400", "500", "600"],
+  subsets: ["latin"],
+  variable: "--font-ibm-plex-sans",
+});
+
 export const metadata: Metadata = {
-  title: "Formora - Forms that adapt to your intent",
-  description: "Build once. Choose how it feels. Create stunning forms with distinct styles that match your context.",
-  keywords: ["forms", "form builder", "surveys", "feedback", "onboarding"],
+  title: "Formora - Experience-First Form UI System",
+  description: "Forms are not containers. Forms are narratives. Experience-first form systems built for authored intent.",
 };
 
 export default function RootLayout({
@@ -29,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexSans.variable} font-sans antialiased min-h-screen bg-bg text-ink`}
       >
         <StackProvider app={stackClientApp}>
           <StackTheme>
