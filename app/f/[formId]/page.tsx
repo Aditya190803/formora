@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Form } from '@/lib/types';
 import { formsService } from '@/lib/appwrite';
@@ -14,6 +14,7 @@ import { Loader2 } from 'lucide-react';
 
 export default function PublicFormPage() {
   const params = useParams();
+  const router = useRouter();
   const formId = params.formId as string;
   const [form, setForm] = useState<Form | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,6 +33,12 @@ export default function PublicFormPage() {
         if (!data || !data.isPublished) {
           setForm(null);
         } else {
+          // Redirect to slug URL if form has slug but was accessed by ID
+          if (data.slug && formId !== data.slug && formId === data.$id) {
+            router.replace(`/f/${data.slug}`);
+            return;
+          }
+          
           setForm(data);
           
           // Check localStorage for 1-response limit
@@ -101,18 +108,28 @@ export default function PublicFormPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-bg font-body">
+        <div className="flex flex-col items-center gap-8">
+          <div className="w-12 h-12 border border-muted flex items-center justify-center">
+            <Loader2 className="w-5 h-5 animate-spin opacity-40" />
+          </div>
+          <p className="text-[10px] uppercase tracking-[0.5em] opacity-30">Loading Narrative</p>
+        </div>
       </div>
     );
   }
 
   if (!form) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center p-8">
-          <h1 className="text-2xl font-bold mb-2">Form Not Found</h1>
-          <p className="text-muted-foreground">This form doesn&apos;t exist or is no longer available.</p>
+      <div className="min-h-screen flex items-center justify-center bg-bg font-body">
+        <div className="text-center max-w-lg px-6">
+          <div className="w-16 h-16 border border-muted flex items-center justify-center mx-auto mb-8">
+            <span className="text-2xl opacity-20">?</span>
+          </div>
+          <h1 className="text-4xl font-heading italic tracking-tight mb-4">Narrative Not Found</h1>
+          <p className="text-[11px] uppercase tracking-[0.3em] opacity-40">
+            This form does not exist or is no longer available.
+          </p>
         </div>
       </div>
     );
@@ -120,10 +137,17 @@ export default function PublicFormPage() {
 
   if (alreadySubmitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center p-8 max-w-md border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <h1 className="text-3xl font-black uppercase italic mb-4">Already Submitted</h1>
-          <p className="text-muted-foreground font-bold uppercase">You have already submitted a response to this form.</p>
+      <div className="min-h-screen flex items-center justify-center bg-bg font-body">
+        <div className="text-center max-w-lg px-6">
+          <div className="w-16 h-16 border border-muted flex items-center justify-center mx-auto mb-8">
+            <svg className="w-6 h-6 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4" />
+            </svg>
+          </div>
+          <h1 className="text-4xl font-heading italic tracking-tight mb-4">Already Submitted</h1>
+          <p className="text-[11px] uppercase tracking-[0.3em] opacity-40">
+            You have already submitted a response to this narrative.
+          </p>
         </div>
       </div>
     );
@@ -131,15 +155,18 @@ export default function PublicFormPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-primary/10">
-        <div className="text-center p-8 max-w-md">
-          <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      <div className="min-h-screen flex items-center justify-center bg-bg font-body">
+        <div className="text-center max-w-lg px-6">
+          <div className="w-20 h-20 border border-accent/40 flex items-center justify-center mx-auto mb-10">
+            <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold mb-3">Thank You!</h1>
-          <p className="text-muted-foreground text-lg">Your response has been submitted successfully.</p>
+          <h1 className="text-5xl font-heading italic tracking-tight mb-4">Thank You</h1>
+          <p className="text-[11px] uppercase tracking-[0.3em] opacity-40 mb-12">
+            Your response has been recorded successfully.
+          </p>
+          <div className="w-24 h-px bg-muted mx-auto" />
         </div>
       </div>
     );

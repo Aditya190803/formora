@@ -1,13 +1,7 @@
-/**
- * Form Analytics Dashboard Component
- * Displays form analytics and insights
- */
-
 'use client';
 
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { FormAnalytics } from '@/lib/types-extended';
 import { Eye, CheckCircle2, TrendingUp, Clock, AlertCircle } from 'lucide-react';
 
@@ -18,156 +12,99 @@ interface FormAnalyticsDashboardProps {
 
 export function FormAnalyticsDashboard({ analytics }: FormAnalyticsDashboardProps) {
   const stats = [
-    {
-      label: 'Total Views',
-      value: analytics.totalViews,
-      icon: Eye,
-      color: 'text-blue-500',
-    },
-    {
-      label: 'Submissions',
-      value: analytics.totalSubmissions,
-      icon: CheckCircle2,
-      color: 'text-green-500',
-    },
-    {
-      label: 'Completion Rate',
-      value: `${analytics.completionRate}%`,
-      icon: TrendingUp,
-      color: 'text-purple-500',
-    },
-    {
-      label: 'Avg. Time',
-      value: `${Math.floor(analytics.averageTimeToComplete / 60)}m`,
-      icon: Clock,
-      color: 'text-orange-500',
-    },
+    { label: 'Views', value: analytics.totalViews, icon: Eye },
+    { label: 'Submissions', value: analytics.totalSubmissions, icon: CheckCircle2 },
+    { label: 'Efficiency', value: `${analytics.completionRate}%`, icon: TrendingUp },
+    { label: 'Tempo', value: `${Math.floor(analytics.averageTimeToComplete / 60)}m`, icon: Clock },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">{stat.label}</p>
-                      <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                    </div>
-                    <Icon className={`w-8 h-8 ${stat.color}`} />
+    <div className="space-y-20 font-body p-6 md:p-12">
+      {/* Stats Summary - Industrial Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 border border-muted divide-y md:divide-y-0 md:divide-x divide-muted">
+        {stats.map((stat, index) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: index * 0.1 }}
+            className="p-8 space-y-4"
+          >
+            <div className="flex justify-between items-center opacity-40">
+              <span className="text-[10px] uppercase tracking-[0.3em] font-medium">{stat.label}</span>
+              <stat.icon className="w-3 h-3" />
+            </div>
+            <div className="text-4xl font-heading tracking-tighter">{stat.value}</div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+          <div className="mb-8 space-y-2">
+            <h3 className="text-[10px] uppercase tracking-[0.5em] opacity-40">Narrative Funnel</h3>
+            <p className="text-xl font-heading">Drop-off tracking by question</p>
+          </div>
+          <div className="h-[300px] w-full border-b border-muted">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.questionsAnalytics}>
+                <XAxis 
+                  dataKey="questionTitle" 
+                  hide
+                />
+                <YAxis hide />
+                <Tooltip 
+                  cursor={{ fill: 'var(--muted)', opacity: 0.1 }}
+                  contentStyle={{ backgroundColor: 'var(--bg)', border: '1px solid var(--muted)', borderRadius: '0', fontFamily: 'var(--font-heading)' }}
+                />
+                <Bar dataKey="totalAnswers" fill="var(--ink)" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="dropOffCount" fill="var(--danger)" radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+          <div className="mb-8 space-y-2">
+            <h3 className="text-[10px] uppercase tracking-[0.5em] opacity-40">Environment</h3>
+            <p className="text-xl font-heading">Device distribution</p>
+          </div>
+          <div className="space-y-8">
+            {analytics.deviceBreakdown && Object.entries(analytics.deviceBreakdown).map(([device, value], i) => {
+              const total = Object.values(analytics.deviceBreakdown!).reduce((a, b) => a + b, 0);
+              const percentage = total > 0 ? (value / total * 100).toFixed(1) : 0;
+              return (
+                <div key={device} className="space-y-2">
+                  <div className="flex justify-between text-[10px] uppercase tracking-widest font-medium">
+                    <span>{device}</span>
+                    <span className="opacity-40">{percentage}%</span>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Completion Funnel */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Completion Funnel</CardTitle>
-              <CardDescription>Drop-off tracking by question</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {analytics.questionsAnalytics.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={analytics.questionsAnalytics}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="questionTitle" angle={-45} textAnchor="end" height={80} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="totalAnswers" fill="#3b82f6" />
-                    <Bar dataKey="dropOffCount" fill="#ef4444" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                  No data available yet
+                  <div className="h-[2px] w-full bg-muted">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      whileInView={{ width: `${percentage}%` }}
+                      className="h-full bg-ink"
+                    />
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Device Breakdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Device Breakdown</CardTitle>
-              <CardDescription>Responses by device type</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {analytics.deviceBreakdown ? (
-                <div className="space-y-4">
-                  {[
-                    { label: 'Desktop', value: analytics.deviceBreakdown.desktop },
-                    { label: 'Mobile', value: analytics.deviceBreakdown.mobile },
-                    { label: 'Tablet', value: analytics.deviceBreakdown.tablet },
-                  ].map(device => {
-                    const total = analytics.deviceBreakdown!.desktop + analytics.deviceBreakdown!.mobile + analytics.deviceBreakdown!.tablet;
-                    const percentage = total > 0 ? ((device.value / total) * 100).toFixed(1) : 0;
-                    return (
-                      <div key={device.label} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">{device.label}</span>
-                          <span className="text-sm text-muted-foreground">{percentage}%</span>
-                        </div>
-                        <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${percentage}%` }}
-                            transition={{ duration: 0.8 }}
-                            className="h-full bg-primary rounded-full"
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-                  No device data available
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              );
+            })}
+          </div>
         </motion.div>
       </div>
 
-      {/* Drop-off Alert */}
       {analytics.dropOffRate > 50 && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 flex items-start gap-3"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="border border-danger p-8 flex items-start gap-6 bg-danger/5"
         >
-          <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
-          <div>
-            <h3 className="font-semibold text-orange-900 dark:text-orange-100">High Drop-off Rate</h3>
-            <p className="text-sm text-orange-800 dark:text-orange-200 mt-1">
-              {analytics.dropOffRate}% of users abandon the form. Consider simplifying your questions or improving the UX.
+          <AlertCircle className="w-6 h-6 text-danger" />
+          <div className="space-y-2">
+            <h3 className="text-xl font-heading uppercase italic tracking-tighter text-danger">Friction Detected</h3>
+            <p className="text-sm opacity-60">
+              {analytics.dropOffRate}% of narratives are abandoned. The current interaction flow suggests high resistance. 
+              Improve the tempo or simplify the inquiry.
             </p>
           </div>
         </motion.div>
