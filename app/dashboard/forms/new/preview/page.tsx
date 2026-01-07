@@ -24,10 +24,13 @@ export default function PreviewPage() {
 
   if (!formData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-black uppercase italic">No preview data found</h1>
-          <Button onClick={() => window.close()} variant="outline" className="border-4 border-foreground">
+      <div className="min-h-screen flex items-center justify-center bg-bg font-body">
+        <div className="text-center space-y-6">
+          <div className="w-16 h-16 border border-muted flex items-center justify-center mx-auto">
+            <span className="text-2xl opacity-20">∅</span>
+          </div>
+          <h1 className="text-3xl font-heading italic">No Preview Data</h1>
+          <Button onClick={() => window.close()} variant="outline" size="sm" className="text-[10px] uppercase tracking-[0.3em]">
             Close Preview
           </Button>
         </div>
@@ -75,19 +78,20 @@ export default function PreviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-bg relative font-body">
       <div className="fixed top-4 right-4 z-[100]">
         <Button 
           onClick={() => window.close()} 
-          variant="destructive" 
-          className="h-12 px-6 border-4 border-foreground shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-black uppercase italic"
+          variant="outline" 
+          size="sm"
+          className="text-[10px] uppercase tracking-[0.2em] border-muted hover:border-ink"
         >
-          <X className="w-5 h-5 mr-2 stroke-[3]" />
+          <X className="w-3 h-3 mr-2" />
           Exit Preview
         </Button>
       </div>
       <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100]">
-        <div className="px-6 py-2 bg-primary text-white border-4 border-foreground font-black uppercase italic shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="px-6 py-2 bg-ink text-bg text-[10px] uppercase tracking-[0.3em]">
           Preview Mode
         </div>
       </div>

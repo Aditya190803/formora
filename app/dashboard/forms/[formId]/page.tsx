@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, use, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { useUser } from '@stackframe/stack';
 import { v4 as uuidv4 } from 'uuid';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import {
   ArrowLeft,
   Plus,
@@ -46,13 +48,18 @@ import {
   GitBranch,
   Calculator,
   Settings,
-  AlertCircle
+  AlertCircle,
+  BarChart3,
+  Globe,
+  Shield
 } from 'lucide-react';
 import Link from 'next/link';
 import { 
   Question, 
   QuestionType, 
-  FormStyle, 
+  FormStyle,
+  LogicJump,
+  Condition, 
 } from '@/lib/types';
 import { formsService, storageService } from '@/lib/appwrite';
 import { toast } from 'sonner';
@@ -123,6 +130,11 @@ function SortableQuestion({
     isDragging,
   } = useSortable({ id: question.id });
 
+  const style = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transition,
+  };
+
   const [activeQuestionTab, setActiveQuestionTab] = useState('content');
 
   const addLogicJump = () => {
@@ -167,312 +179,220 @@ function SortableQuestion({
     <div 
       ref={setNodeRef} 
       style={style} 
-      className="group relative border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all overflow-hidden"
+      className={cn(
+        "group relative border border-muted bg-bg transition-all duration-300",
+        isDragging && "z-50 opacity-50 ring-1 ring-ink/10"
+      )}
     >
       <div 
         {...attributes} 
         {...listeners}
-        className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 cursor-grab active:cursor-grabbing p-2 border-4 border-foreground bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+        className="absolute -left-12 top-0 bottom-0 flex items-center justify-center w-12 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-20 hover:opacity-100 transition-opacity"
       >
-        <GripVertical className="w-6 h-6 stroke-[3]" />
+        <GripVertical className="w-4 h-4" />
       </div>
 
       <Tabs value={activeQuestionTab} onValueChange={setActiveQuestionTab} className="w-full">
-        <div className="flex items-center justify-between border-b-4 border-foreground bg-muted/30 px-6 py-2">
-          <TabsList className="h-10 border-2 border-foreground bg-background p-1">
-            <TabsTrigger value="content" className="font-black uppercase italic text-[10px] px-4 data-[state=active]:bg-primary data-[state=active]:text-white">
-              Content
+        <div className="flex items-center justify-between border-b border-muted bg-muted/5 px-6 py-3">
+          <TabsList className="h-auto p-0 bg-transparent flex gap-6">
+            <TabsTrigger 
+              value="content" 
+              className="rounded-none border-b border-transparent data-[state=active]:border-ink data-[state=active]:bg-transparent text-[10px] uppercase tracking-widest font-medium pb-1"
+            >
+              Structure
             </TabsTrigger>
-            <TabsTrigger value="logic" className="font-black uppercase italic text-[10px] px-4 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger 
+              value="logic" 
+              className="rounded-none border-b border-transparent data-[state=active]:border-ink data-[state=active]:bg-transparent text-[10px] uppercase tracking-widest font-medium pb-1"
+            >
               Logic
             </TabsTrigger>
           </TabsList>
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 border-2 border-foreground bg-primary text-white flex items-center justify-center font-black italic text-xs shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
-              {index + 1}
-            </span>
-            <div className="px-3 py-1 border-2 border-foreground bg-muted text-[8px] font-black uppercase tracking-widest">
-              {question.type.replace('_', ' ')}
+          
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] opacity-20 font-mono">[ { (index + 1).toString().padStart(2, '0') } ]</span>
+              <div className="text-[9px] uppercase tracking-[0.2em] opacity-40">
+                {question.type.replace('_', ' ')}
+              </div>
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => duplicateQuestion(question.id)}
-              className="h-8 w-8 hover:text-primary transition-all"
-              title="Duplicate Question"
-            >
-              <Copy className="w-4 h-4 stroke-[2]" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => deleteQuestion(question.id)}
-              className="h-8 w-8 hover:text-destructive transition-all"
-              title="Delete Question"
-            >
-              <Trash2 className="w-4 h-4 stroke-[2]" />
-            </Button>
+            
+            <div className="flex items-center gap-2 border-l border-muted pl-4">
+              <button 
+                onClick={() => duplicateQuestion(question.id)}
+                className="opacity-20 hover:opacity-100 transition-opacity"
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </button>
+              <button 
+                onClick={() => deleteQuestion(question.id)}
+                className="opacity-20 hover:text-danger hover:opacity-100 transition-opacity"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
-        <TabsContent value="content" className="p-8 mt-0 space-y-6">
-          <div className="space-y-4">
+        <TabsContent value="content" className="p-10 space-y-10 mt-0">
+          <div className="space-y-6">
             <Input 
               value={question.title}
               onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
-              placeholder="ENTER YOUR QUESTION..."
-              className="h-12 border-4 border-foreground bg-muted/30 text-xl font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+              placeholder="Inquiry label..."
+              className="text-2xl font-heading tracking-tight italic !border-b-muted focus:!border-b-ink"
             />
             <Textarea 
               value={question.description}
               onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
-              placeholder="ADD A DESCRIPTION (OPTIONAL)..."
-              className="min-h-[80px] border-4 border-foreground bg-muted/10 font-bold uppercase focus-visible:ring-0"
+              placeholder="Add contextual narrative (optional)..."
+              className="min-h-[60px] border-0 border-b border-muted bg-transparent font-body text-sm rounded-none focus-visible:ring-0 focus-visible:border-ink resize-none p-0"
             />
-            {(question.type === 'short_text' || question.type === 'long_text' || question.type === 'email' || question.type === 'number') && (
-              <Input 
-                value={question.placeholder || ''}
-                onChange={(e) => updateQuestion(question.id, { placeholder: e.target.value })}
-                placeholder="INPUT PLACEHOLDER (OPTIONAL)..."
-                className="h-10 border-2 border-foreground bg-muted/5 font-bold uppercase italic focus-visible:ring-0"
-              />
-            )}
           </div>
 
           {/* Options for choice types */}
           {(question.type === 'multiple_choice' || question.type === 'checkboxes' || question.type === 'dropdown') && (
-            <div className="space-y-4 border-l-4 border-foreground/10 pl-6 py-2">
-              <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Choice Options</div>
-              {question.options?.map((option) => (
-                <div key={option.id} className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-2 border-foreground bg-muted shrink-0" />
-                  <Input 
-                    value={option.label}
-                    onChange={(e) => updateOption(question.id, option.id, e.target.value)}
-                    className="h-10 border-2 border-foreground bg-card font-bold uppercase"
-                  />
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => deleteOption(question.id, option.id)}
-                    className="h-10 w-10 hover:text-destructive shrink-0"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
+            <div className="space-y-6 border-l border-muted pl-10 py-2">
+              <div className="text-[9px] uppercase tracking-[0.3em] opacity-40 mb-6">Discrete Options</div>
+              <div className="space-y-3">
+                {question.options?.map((option) => (
+                  <div key={option.id} className="flex items-center gap-6 group/option">
+                    <div className="w-4 h-4 border border-muted shrink-0" />
+                    <Input 
+                      value={option.label}
+                      onChange={(e) => updateOption(question.id, option.id, e.target.value)}
+                      className="!h-8 !border-b-muted focus:!border-b-ink text-sm bg-transparent p-0"
+                    />
+                    <button 
+                      onClick={() => deleteOption(question.id, option.id)}
+                      className="opacity-0 group-hover/option:opacity-40 hover:opacity-100 hover:text-danger transition-all"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => addOption(question.id)}
-                className="mt-4 border-2 border-foreground bg-card shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all font-black uppercase italic text-[10px]"
+                className="mt-6"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Option
+                <Plus className="w-3 h-3 mr-2" />
+                Add Node
               </Button>
             </div>
           )}
 
-          <div className="pt-4 border-t-2 border-foreground/5 flex items-center gap-6">
-            <div className="flex items-center gap-3">
+          <div className="pt-6 border-t border-muted flex items-center justify-between">
+            <div className="flex items-center gap-4">
               <Checkbox 
                 id={`req-${question.id}`} 
                 checked={question.required}
                 onCheckedChange={(checked) => updateQuestion(question.id, { required: !!checked })}
-                className="w-6 h-6 border-4 border-foreground data-[state=checked]:bg-primary"
+                className="border-muted rounded-none"
               />
-              <Label htmlFor={`req-${question.id}`} className="font-black uppercase italic text-xs cursor-pointer">Required Question</Label>
+              <Label htmlFor={`req-${question.id}`} className="text-[10px] uppercase tracking-widest opacity-60 cursor-pointer">Mandatory</Label>
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="logic" className="p-8 mt-0 space-y-8 animate-in fade-in slide-in-from-top-4">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-xl font-black uppercase italic flex items-center gap-2">
-                  <GitBranch className="w-5 h-5 text-primary" />
-                  Jump Logic
-                </h4>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">Control the path of your form based on answers.</p>
-              </div>
-              <Button
-                size="sm"
-                onClick={addLogicJump}
-                className="border-4 border-foreground bg-card text-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all font-black uppercase italic text-[10px]"
-              >
-                <Plus className="w-3 h-3 mr-2" />
-                Add Jump
-              </Button>
+        <TabsContent value="logic" className="p-10 space-y-12 mt-0">
+          <div className="flex items-center justify-between border-b border-muted pb-8">
+            <div className="space-y-1">
+              <h4 className="text-[11px] uppercase tracking-[0.2em] font-medium flex items-center gap-3">
+                <GitBranch className="w-3 h-3" />
+                Narrative Jumps
+              </h4>
+              <p className="text-[9px] opacity-40 uppercase tracking-widest">Control the sequence of inquiry.</p>
             </div>
-
-            {(!question.logicJumps || question.logicJumps.length === 0) ? (
-              <div className="p-8 border-4 border-foreground border-dashed bg-muted/5 text-center">
-                <p className="font-black uppercase italic text-xs text-muted-foreground">No logic jumps defined. This question will always lead to the next one.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {(question.logicJumps || []).map((jump, jIndex) => (
-                  <div key={jump.id} className="p-6 border-4 border-foreground bg-muted/10 space-y-4 relative">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeLogicJump(jump.id)}
-                      className="absolute top-2 right-2 h-8 w-8 hover:text-destructive"
-                    >
-                      <XCircle className="w-4 h-4" />
-                    </Button>
-
-                    <div className="flex flex-wrap items-center gap-3 font-black uppercase italic text-xs">
-                      <span className="bg-foreground text-white px-2 py-0.5">IF</span>
-                      <span>ANSWER</span>
-                      <Select 
-                        value={jump.conditions[0]?.operator || 'equals'}
-                        onValueChange={(val) => {
-                          const conds = [...jump.conditions];
-                          if (conds[0]) conds[0].operator = val as ConditionOperator;
-                          else conds.push({ id: uuidv4(), questionId: question.id, operator: val as ConditionOperator, value: '' });
-                          updateLogicJump(jump.id, { conditions: conds });
-                        }}
-                      >
-                        <SelectTrigger className="w-[140px] h-8 border-2 border-foreground bg-card text-[10px] font-black uppercase">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="equals">Equals</SelectItem>
-                          <SelectItem value="not_equals">Does Not Equal</SelectItem>
-                          <SelectItem value="contains">Contains</SelectItem>
-                          <SelectItem value="not_contains">Does Not Contain</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input 
-                        value={jump.conditions[0]?.value || ''}
-                        onChange={(e) => {
-                          const conds = [...jump.conditions];
-                          if (conds[0]) conds[0].value = e.target.value;
-                          else conds.push({ id: uuidv4(), questionId: question.id, operator: 'equals', value: e.target.value });
-                          updateLogicJump(jump.id, { conditions: conds });
-                        }}
-                        className="h-8 w-[150px] border-2 border-foreground bg-card text-[10px] font-black uppercase"
-                        placeholder="VALUE..."
-                      />
-                      <span className="bg-primary text-white px-2 py-0.5">THEN</span>
-                      <span className="bg-foreground text-white px-2 py-0.5">JUMP TO</span>
-                      <Select 
-                        value={jump.destinationQuestionId || ''}
-                        onValueChange={(val) => updateLogicJump(jump.id, { 
-                          action: val === 'end' ? 'end' : 'jump',
-                          destinationQuestionId: val === 'end' ? undefined : val 
-                        })}
-                      >
-                        <SelectTrigger className="w-[200px] h-8 border-2 border-foreground bg-card text-[10px] font-black uppercase">
-                          <SelectValue placeholder="SELECT QUESTION" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="end">End of Form</SelectItem>
-                          {allQuestions
-                            .filter(q => q.id !== question.id)
-                            .map((otherQ, otherIndex) => (
-                              <SelectItem key={otherQ.id} value={otherQ.id}>
-                                {otherIndex + 1}. {otherQ.title || 'Untitled'}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {question.type === 'number' && (
-              <div className="pt-8 border-t-4 border-foreground/10 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xl font-black uppercase italic flex items-center gap-2">
-                      <Calculator className="w-5 h-5 text-primary" />
-                      Calculations
-                    </h4>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Update other fields based on this numeric answer.</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      const newCalc: CalculationRule = { id: uuidv4(), formula: '', targetQuestionId: '' };
-                      updateQuestion(question.id, { calculations: [...(question.calculations || []), newCalc] });
-                    }}
-                    className="border-4 border-foreground bg-card text-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all font-black uppercase italic text-[10px]"
-                  >
-                    <Plus className="w-3 h-3 mr-2" />
-                    Add Calc
-                  </Button>
-                </div>
-
-                {(!question.calculations || question.calculations.length === 0) ? (
-                  <div className="p-8 border-4 border-foreground border-dashed bg-muted/5 text-center">
-                    <p className="font-black uppercase italic text-xs text-muted-foreground">No calculations defined for this numeric field.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {question.calculations.map((calc, cIndex) => (
-                      <div key={calc.id} className="p-6 border-4 border-foreground bg-muted/10 space-y-4 relative">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => updateQuestion(question.id, { calculations: question.calculations?.filter(c => c.id !== calc.id) })}
-                          className="absolute top-2 right-2 h-8 w-8 hover:text-destructive"
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </Button>
-
-                        <div className="flex flex-wrap items-center gap-3 font-black uppercase italic text-xs">
-                          <span className="bg-foreground text-white px-2 py-0.5">SET</span>
-                          <Select 
-                            value={calc.targetQuestionId}
-                            onValueChange={(val) => {
-                              const calcs = [...(question.calculations || [])];
-                              calcs[cIndex].targetQuestionId = val;
-                              updateQuestion(question.id, { calculations: calcs });
-                            }}
-                          >
-                            <SelectTrigger className="w-[180px] h-8 border-2 border-foreground bg-card text-[10px] font-black uppercase">
-                              <SelectValue placeholder="TARGET FIELD" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {allQuestions
-                                .filter(q => q.id !== question.id && q.type === 'number')
-                                .map((otherQ, otherIndex) => (
-                                  <SelectItem key={otherQ.id} value={otherQ.id}>
-                                    {otherIndex + 1}. {otherQ.title || 'Untitled'}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                          <span className="bg-primary text-white px-2 py-0.5">TO</span>
-                          <Input 
-                            value={calc.formula}
-                            onChange={(e) => {
-                              const calcs = [...(question.calculations || [])];
-                              calcs[cIndex].formula = e.target.value;
-                              updateQuestion(question.id, { calculations: calcs });
-                            }}
-                            className="h-8 flex-1 min-w-[200px] border-2 border-foreground bg-card text-[10px] font-black uppercase"
-                            placeholder="FORMULA (e.g. {{self}} * 1.1)"
-                          />
-                        </div>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase opacity-70">Use {"{{self}}"} for this question's value, or {"{{qID}}"} for others.</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={addLogicJump}
+            >
+              <Plus className="w-3 h-3 mr-2" />
+              New Path
+            </Button>
           </div>
+
+          {(!question.logicJumps || question.logicJumps.length === 0) ? (
+            <div className="py-20 text-center border border-muted border-dashed">
+              <p className="text-[10px] uppercase tracking-[0.4em] opacity-20">Linear sequence maintained</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {(question.logicJumps || []).map((jump, jIndex) => (
+                <div key={jump.id} className="p-8 border border-muted bg-muted/5 space-y-8 relative">
+                  <button
+                    onClick={() => removeLogicJump(jump.id)}
+                    className="absolute top-6 right-6 opacity-20 hover:opacity-100 hover:text-danger transition-opacity"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex flex-wrap items-center gap-6 text-[10px] uppercase tracking-[0.2em] font-medium">
+                    <span className="opacity-20 italic">If input matches</span>
+                    <Select 
+                      value={jump.conditions[0]?.operator || 'equals'}
+                      onValueChange={(val) => {
+                        const conds = [...jump.conditions];
+                        if (conds[0]) conds[0].operator = val as any;
+                        else conds.push({ id: uuidv4(), questionId: question.id, operator: val as any, value: '' });
+                        updateLogicJump(jump.id, { conditions: conds });
+                      }}
+                    >
+                      <SelectTrigger className="w-[140px] h-8 rounded-none border-0 border-b border-muted bg-transparent focus:ring-0">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-none border-muted">
+                        <SelectItem value="equals">Equals</SelectItem>
+                        <SelectItem value="not_equals">Does Not Equal</SelectItem>
+                        <SelectItem value="contains">Contains</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input 
+                      value={jump.conditions[0]?.value || ''}
+                      onChange={(e) => {
+                        const conds = [...jump.conditions];
+                        if (conds[0]) conds[0].value = e.target.value;
+                        else conds.push({ id: uuidv4(), questionId: question.id, operator: 'equals', value: e.target.value });
+                        updateLogicJump(jump.id, { conditions: conds });
+                      }}
+                      className="h-8 w-[150px] !border-b-muted focus:!border-b-ink italic"
+                      placeholder="Value..."
+                    />
+                    <span className="opacity-20 italic">then jump to</span>
+                    <Select 
+                      value={jump.destinationQuestionId || ''}
+                      onValueChange={(val) => updateLogicJump(jump.id, { 
+                        action: val === 'end' ? 'end' : 'jump',
+                        destinationQuestionId: val === 'end' ? undefined : val 
+                      })}
+                    >
+                      <SelectTrigger className="w-[200px] h-8 rounded-none border-0 border-b border-muted bg-transparent focus:ring-0">
+                        <SelectValue placeholder="Target Node" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-none border-muted">
+                        <SelectItem value="end">End Narrative</SelectItem>
+                        {allQuestions
+                          .filter(q => q.id !== question.id)
+                          .map((otherQ, otherIndex) => (
+                            <SelectItem key={otherQ.id} value={otherQ.id} className="text-[10px] uppercase tracking-wider">
+                              {otherIndex + 1}. {otherQ.title || 'Untitled Node'}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
   );
-}
 }
 
 export default function EditFormPage({ params }: { params: Promise<{ formId: string }> }) {
@@ -506,14 +426,6 @@ export default function EditFormPage({ params }: { params: Promise<{ formId: str
     }, 500);
     return () => clearTimeout(timer);
   }, [slug]);
-
-  useEffect(() => {
-    if (debouncedSlug && debouncedSlug !== '') {
-      validateSlug(debouncedSlug);
-    } else {
-      setSlugError('');
-    }
-  }, [debouncedSlug, validateSlug]);
 
   const addToHistory = useCallback((newQuestions: Question[]) => {
     setHistory(prev => {
@@ -629,6 +541,15 @@ export default function EditFormPage({ params }: { params: Promise<{ formId: str
       setIsSlugValidating(false);
     }
   }, [formId]);
+
+  // Validate slug when debounced value changes
+  useEffect(() => {
+    if (debouncedSlug && debouncedSlug !== '') {
+      validateSlug(debouncedSlug);
+    } else {
+      setSlugError('');
+    }
+  }, [debouncedSlug, validateSlug]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -863,129 +784,131 @@ export default function EditFormPage({ params }: { params: Promise<{ formId: str
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 animate-spin text-primary stroke-[3]" />
-          <p className="text-xl font-black uppercase italic">Loading Form...</p>
+      <div className="min-h-screen flex items-center justify-center font-body">
+        <div className="flex flex-col items-center gap-8">
+          <Loader2 className="w-8 h-8 animate-spin opacity-20" />
+          <p className="text-[10px] uppercase tracking-[0.5em] opacity-40">Synchronizing Atelier</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-bg font-body">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b-4 border-foreground p-4">
+      <header className="sticky top-0 z-50 bg-bg/80 backdrop-blur-md border-b border-muted px-6 py-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Button variant="ghost" size="icon" className="h-12 w-12 border-2 border-transparent hover:border-foreground hover:bg-muted transition-all" asChild>
-              <Link href="/dashboard/forms">
-                <ArrowLeft className="w-6 h-6 stroke-[3]" />
-              </Link>
-            </Button>
-            <div className="h-10 w-1 bg-foreground/10 hidden sm:block" />
-            <div className="hidden sm:block">
+          <div className="flex items-center gap-8">
+            <Link href="/dashboard" className="opacity-40 hover:opacity-100 transition-opacity">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            
+            <div className="space-y-1">
               {isEditingTitle ? (
-                <div className="flex items-center gap-2">
-                  <Input 
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    onBlur={() => setIsEditingTitle(false)}
-                    onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
-                    autoFocus
-                    className="h-8 w-[200px] border-2 border-foreground bg-card font-black uppercase italic text-sm"
-                  />
-                </div>
+                <Input 
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onBlur={() => setIsEditingTitle(false)}
+                  onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
+                  autoFocus
+                  className="h-8 min-w-[300px] !border-b-ink"
+                />
               ) : (
                 <div 
-                  className="group flex items-center gap-2 cursor-pointer"
+                  className="group flex items-center gap-4 cursor-pointer"
                   onClick={() => setIsEditingTitle(true)}
                 >
-                  <h1 className="text-xl font-black uppercase italic truncate max-w-[200px]">
-                    {title || 'UNTITLED FORM'}
+                  <h1 className="text-2xl font-heading tracking-tighter italic">
+                    {title || 'Untitled Narrative'}
                   </h1>
-                  <Edit3 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Edit3 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               )}
-              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
-                EDITING FORM
-              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center border-4 border-foreground bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mr-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 pr-6 border-r border-muted mr-6">
+              <button 
                 onClick={undo}
                 disabled={historyIndex <= 0}
-                className="h-10 w-10 rounded-none border-r-2 border-foreground hover:bg-muted transition-all"
-                title="Undo (Ctrl+Z)"
+                className="p-2 opacity-40 hover:opacity-100 disabled:opacity-10 transition-opacity"
               >
-                <Undo2 className="w-5 h-5 stroke-[3]" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
+                <Undo2 className="w-4 h-4" />
+              </button>
+              <button 
                 onClick={redo}
                 disabled={historyIndex >= history.length - 1}
-                className="h-10 w-10 rounded-none hover:bg-muted transition-all"
-                title="Redo (Ctrl+Y)"
+                className="p-2 opacity-40 hover:opacity-100 disabled:opacity-10 transition-opacity"
               >
-                <Redo2 className="w-5 h-5 stroke-[3]" />
-              </Button>
+                <Redo2 className="w-4 h-4" />
+              </button>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={handlePreview}
-              className="h-12 px-6 border-4 border-foreground bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-black uppercase italic"
-            >
-              <Eye className="w-5 h-5 mr-2 stroke-[3]" />
+            
+            <Button variant="outline" onClick={handlePreview}>
               Preview
             </Button>
-            <Button 
-              onClick={handleSave} 
-              disabled={saving}
-              className="h-12 px-8 border-4 border-foreground bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-black uppercase italic"
-            >
-              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 mr-2 stroke-[3]" />}
-              Save Changes
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Publish Changes'}
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-12">
-          <div className="flex justify-center">
-            <TabsList className="h-16 p-2 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-              <TabsTrigger value="build" className="h-full px-8 font-black uppercase italic data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                1. Build
+      <main className="max-w-7xl mx-auto p-12">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-20">
+          <div className="flex justify-start border-b border-muted">
+            <TabsList className="h-auto p-0 bg-transparent flex gap-12">
+              <TabsTrigger 
+                value="build" 
+                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-ink data-[state=active]:bg-transparent pb-6 text-[10px] uppercase tracking-[0.4em] font-medium"
+              >
+                01. Structure
               </TabsTrigger>
-              <TabsTrigger value="design" className="h-full px-8 font-black uppercase italic data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                2. Design
+              <TabsTrigger 
+                value="design" 
+                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-ink data-[state=active]:bg-transparent pb-6 text-[10px] uppercase tracking-[0.4em] font-medium"
+              >
+                02. Aesthetic
               </TabsTrigger>
-              <TabsTrigger value="settings" className="h-full px-8 font-black uppercase italic data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                3. Settings
+              <TabsTrigger 
+                value="settings" 
+                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-ink data-[state=active]:bg-transparent pb-6 text-[10px] uppercase tracking-[0.4em] font-medium"
+              >
+                03. Protocol
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="build" className="space-y-12">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          <TabsContent value="build" className="mt-0">
+            <motion.div 
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24"
+            >
               {/* Left: Question List */}
               <div className="lg:col-span-8 space-y-8">
                 {questions.length === 0 ? (
-                  <div className="py-32 text-center border-4 border-foreground border-dashed bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-12">
-                    <div className="w-24 h-24 border-4 border-foreground bg-muted flex items-center justify-center mx-auto mb-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-                      <Plus className="w-12 h-12 text-muted-foreground stroke-[3]" />
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="py-32 lg:py-48 flex flex-col items-center justify-center border border-dashed border-muted/60 bg-gradient-to-b from-muted/5 to-transparent"
+                  >
+                    <div className="w-16 h-16 border border-muted/40 flex items-center justify-center mb-8">
+                      <Plus className="w-5 h-5 opacity-20" />
                     </div>
-                    <h2 className="text-3xl font-black mb-4 uppercase italic">Your form is empty</h2>
-                    <p className="text-muted-foreground max-w-md mx-auto text-lg font-bold uppercase">
-                      Add your first question from the sidebar to start building.
-                    </p>
-                  </div>
+                    <p className="text-[11px] uppercase tracking-[0.4em] opacity-30 mb-6">No nodes defined</p>
+                    <p className="text-sm font-heading italic opacity-50 mb-8">Begin structuring your narrative</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => addQuestion('short_text')}
+                      className="text-[10px] uppercase tracking-[0.3em]"
+                    >
+                      Create First Node
+                    </Button>
+                  </motion.div>
                 ) : (
                   <DndContext 
                     sensors={sensors}
@@ -996,7 +919,7 @@ export default function EditFormPage({ params }: { params: Promise<{ formId: str
                       items={questions.map(q => q.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      <div className="space-y-6">
+                      <div className="space-y-4">
                         {questions.map((question, index) => (
                           <SortableQuestion 
                             key={question.id}
@@ -1018,329 +941,316 @@ export default function EditFormPage({ params }: { params: Promise<{ formId: str
               </div>
 
               {/* Right: Question Types Sidebar */}
-              <div className="lg:col-span-4 space-y-8">
-                <div className="sticky top-32 p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                  <h3 className="text-2xl font-black uppercase italic mb-6">Add Question</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    {questionTypes.map((type) => (
-                      <Button
+              <div className="lg:col-span-4">
+                <div className="sticky top-32 space-y-8">
+                  <div className="flex items-center justify-between pb-4 border-b border-muted">
+                    <h3 className="text-[10px] uppercase tracking-[0.5em] opacity-40">Node Types</h3>
+                    <span className="text-[9px] font-mono opacity-20">{questionTypes.length}</span>
+                  </div>
+                  <div className="space-y-1">
+                    {questionTypes.map((type, idx) => (
+                      <motion.button
                         key={type.value}
-                        variant="outline"
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.03 }}
                         onClick={() => addQuestion(type.value)}
-                        className="h-14 justify-start border-4 border-foreground bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-black uppercase italic text-sm"
+                        className="w-full flex items-center gap-4 px-4 py-3 hover:bg-muted/10 border border-transparent hover:border-muted/50 transition-all group"
                       >
-                        <type.icon className="w-5 h-5 mr-4 stroke-[3] text-primary" />
-                        {type.label}
-                      </Button>
+                        <div className="w-8 h-8 border border-muted/40 flex items-center justify-center group-hover:border-ink/30 transition-colors">
+                          <type.icon className="w-3 h-3 opacity-30 group-hover:opacity-80 transition-opacity" />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <span className="text-[11px] uppercase tracking-[0.15em] font-medium block">{type.label}</span>
+                        </div>
+                        <Plus className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+                      </motion.button>
                     ))}
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </TabsContent>
 
-          <TabsContent value="design" className="space-y-12">
-            <div className="max-w-4xl mx-auto space-y-12">
-              <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
-                <h3 className="text-3xl font-black uppercase italic">Choose Style</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                  {(['classic', 'conversational', 'marketing', 'neo_brutalism', 'minimal'] as FormStyle[]).map((s) => {
+          <TabsContent value="design" className="mt-0">
+            <motion.div 
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="max-w-5xl space-y-24"
+            >
+              <section className="space-y-8">
+                <div className="flex items-center justify-between pb-4 border-b border-muted">
+                  <h3 className="text-[10px] uppercase tracking-[0.5em] opacity-40">Presentation Mode</h3>
+                  <span className="text-[9px] font-mono opacity-20">5 archetypes</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  {(['classic', 'conversational', 'marketing', 'neo_brutalism', 'minimal'] as FormStyle[]).map((s, idx) => {
                     const Icon = styleIcons[s];
+                    const isSelected = style === s;
                     return (
-                      <button
+                      <motion.button
                         key={s}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
                         onClick={() => setStyle(s)}
                         className={cn(
-                          "p-8 border-4 border-foreground transition-all flex flex-col items-center text-center gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none",
-                          style === s ? "bg-primary text-white" : "bg-card"
+                          "relative p-6 flex flex-col items-center gap-4 border transition-all group",
+                          isSelected 
+                            ? "border-ink bg-ink text-bg" 
+                            : "border-muted/60 hover:border-muted bg-transparent hover:bg-muted/5"
                         )}
                       >
-                        <Icon className={cn("w-12 h-12 stroke-[3]", style === s ? "text-white" : "text-primary")} />
-                        <div className="font-black uppercase italic text-xs">{s.replace('_', ' ')}</div>
-                      </button>
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 w-2 h-2 bg-bg rounded-full" />
+                        )}
+                        <div className={cn(
+                          "w-10 h-10 border flex items-center justify-center transition-colors",
+                          isSelected ? "border-bg/30" : "border-muted/40 group-hover:border-muted"
+                        )}>
+                          <Icon className={cn(
+                            "w-4 h-4 transition-opacity",
+                            isSelected ? "opacity-80" : "opacity-30 group-hover:opacity-60"
+                          )} />
+                        </div>
+                        <span className="text-[9px] uppercase tracking-[0.2em] font-medium">
+                          {s.replace('_', ' ')}
+                        </span>
+                      </motion.button>
                     );
                   })}
                 </div>
-              </div>
+              </section>
 
-              <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-3xl font-black uppercase italic">Customization</h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
+              <section className="space-y-8">
+                <div className="flex items-center justify-between pb-4 border-b border-muted">
+                  <h3 className="text-[10px] uppercase tracking-[0.5em] opacity-40">Visual Parameters</h3>
+                  <button
                     onClick={handleResetDesign}
-                    className="border-2 border-foreground font-black uppercase italic text-xs h-8 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+                    className="text-[9px] uppercase tracking-[0.2em] opacity-30 hover:opacity-100 transition-opacity flex items-center gap-2 px-3 py-1.5 border border-transparent hover:border-muted"
                   >
-                    <RotateCcw className="w-3 h-3 mr-2" />
+                    <RotateCcw className="w-3 h-3" />
                     Reset to Default
-                  </Button>
+                  </button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Primary Color</Label>
-                    <div className="flex gap-4">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="space-y-4 p-6 border border-muted/50 bg-muted/5"
+                  >
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-50 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: primaryColor }} />
+                      Accent Color
+                    </Label>
+                    <div className="flex gap-3 items-center">
+                      <div className="w-14 h-14 border border-muted overflow-hidden">
+                        <input 
+                          type="color"
+                          value={primaryColor}
+                          onChange={(e) => setPrimaryColor(e.target.value)}
+                          className="w-full h-full bg-transparent cursor-pointer scale-150"
+                        />
+                      </div>
                       <Input 
-                        type="color"
                         value={primaryColor}
                         onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="h-14 w-24 border-4 border-foreground bg-muted/30 p-1 cursor-pointer"
-                      />
-                      <Input 
-                        value={primaryColor}
-                        onChange={(e) => setPrimaryColor(e.target.value)}
-                        placeholder="#000000"
-                        className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                        className="flex-1 h-10 font-mono text-sm !border-muted focus:!border-ink bg-transparent"
                       />
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Background Color</Label>
-                    <div className="flex gap-4">
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="space-y-4 p-6 border border-muted/50 bg-muted/5"
+                  >
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-50 flex items-center gap-2">
+                      <div className="w-2 h-2 border border-muted" style={{ backgroundColor: backgroundColor }} />
+                      Canvas Color
+                    </Label>
+                    <div className="flex gap-3 items-center">
+                      <div className="w-14 h-14 border border-muted overflow-hidden">
+                        <input 
+                          type="color"
+                          value={backgroundColor}
+                          onChange={(e) => setBackgroundColor(e.target.value)}
+                          className="w-full h-full bg-transparent cursor-pointer scale-150"
+                        />
+                      </div>
                       <Input 
-                        type="color"
                         value={backgroundColor}
                         onChange={(e) => setBackgroundColor(e.target.value)}
-                        className="h-14 w-24 border-4 border-foreground bg-muted/30 p-1 cursor-pointer"
-                      />
-                      <Input 
-                        value={backgroundColor}
-                        onChange={(e) => setBackgroundColor(e.target.value)}
-                        placeholder="#FFFFFF"
-                        className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                        className="flex-1 h-10 font-mono text-sm !border-muted focus:!border-ink bg-transparent"
                       />
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Text Color</Label>
-                    <div className="flex gap-4">
-                      <Input 
-                        type="color"
-                        value={textColor}
-                        onChange={(e) => setTextColor(e.target.value)}
-                        className="h-14 w-24 border-4 border-foreground bg-muted/30 p-1 cursor-pointer"
-                      />
-                      <Input 
-                        value={textColor}
-                        onChange={(e) => setTextColor(e.target.value)}
-                        placeholder="#000000"
-                        className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Font Family</Label>
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="space-y-4 p-6 border border-muted/50 bg-muted/5"
+                  >
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-50">Typography Set</Label>
                     <Select value={fontFamily} onValueChange={setFontFamily}>
-                      <SelectTrigger className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus:ring-0">
-                        <SelectValue placeholder="SELECT FONT" />
+                      <SelectTrigger className="h-12 rounded-none border border-muted bg-transparent focus:ring-0 focus:border-ink">
+                        <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="border-4 border-foreground p-2">
-                        <SelectItem value="sans" className="font-sans font-black uppercase italic">Sans Serif (Inter)</SelectItem>
-                        <SelectItem value="serif" className="font-serif font-black uppercase italic">Serif (Playfair)</SelectItem>
-                        <SelectItem value="mono" className="font-mono font-black uppercase italic">Monospace (JetBrains)</SelectItem>
-                        <SelectItem value="heading" className="font-black uppercase italic">Heading (Impact Style)</SelectItem>
+                      <SelectContent className="rounded-none border-muted">
+                        <SelectItem value="sans" className="text-[11px] uppercase tracking-wider">Sans — Standard</SelectItem>
+                        <SelectItem value="serif" className="text-[11px] uppercase tracking-wider">Serif — Editorial</SelectItem>
+                        <SelectItem value="mono" className="text-[11px] uppercase tracking-wider">Mono — Industrial</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
+                  </motion.div>
                   
-                  <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Submit Button Text</Label>
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.25 }}
+                    className="space-y-4 p-6 border border-muted/50 bg-muted/5"
+                  >
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-50">Submit Button Text</Label>
                     <Input 
                       value={buttonText}
                       onChange={(e) => setButtonText(e.target.value)}
-                      placeholder="SUBMIT"
-                      className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                      placeholder="Submit"
+                      className="h-12 !border-muted focus:!border-ink bg-transparent font-heading italic text-lg"
                     />
-                  </div>
-
-                  {style === 'conversational' && (
-                    <div className="space-y-3">
-                      <Label className="text-sm font-black uppercase tracking-widest ml-1">Animation Speed ({animationSpeed}s)</Label>
-                      <div className="flex items-center gap-4 h-14 border-4 border-foreground bg-muted/30 px-4">
-                        <input 
-                          type="range" 
-                          min="0.1" 
-                          max="1.5" 
-                          step="0.1"
-                          value={animationSpeed}
-                          onChange={(e) => setAnimationSpeed(parseFloat(e.target.value))}
-                          className="flex-1 accent-primary"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {style === 'marketing' && (
-                    <div className="col-span-full space-y-3">
-                      <Label className="text-sm font-black uppercase tracking-widest ml-1">Background Image</Label>
-                      <div className="flex items-center gap-6">
-                        {backgroundImage ? (
-                          <div className="relative w-40 h-24 border-4 border-foreground group overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img 
-                              src={backgroundImage} 
-                              alt="Background" 
-                              className="w-full h-full object-cover"
-                            />
-                            <button
-                              onClick={() => setBackgroundImage('')}
-                              className="absolute top-1 right-1 bg-destructive text-white p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex-1">
-                            <label className="flex flex-col items-center justify-center w-full h-32 border-4 border-dashed border-foreground bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer group">
-                              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                <ImagePlus className="w-10 h-10 mb-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                                <p className="text-xs font-black uppercase italic">
-                                  {isUploadingImage ? 'UPLOADING...' : 'CLICK TO UPLOAD BACKGROUND IMAGE'}
-                                </p>
-                              </div>
-                              <input 
-                                type="file" 
-                                className="hidden" 
-                                accept="image/*"
-                                onChange={handleImageUpload}
-                                disabled={isUploadingImage}
-                              />
-                            </label>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-[10px] font-black uppercase text-muted-foreground ml-1">Used as a signature visual element in Marketing style</p>
-                    </div>
-                  )}
+                  </motion.div>
                 </div>
-              </div>
-
-              <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
-                <h3 className="text-3xl font-black uppercase italic">Form Info</h3>
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Form Title</Label>
-                    <Input 
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="E.G. CUSTOMER FEEDBACK"
-                      className="h-14 border-4 border-foreground bg-muted/30 text-xl font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Description</Label>
-                    <Textarea 
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="TELL YOUR AUDIENCE WHAT THIS FORM IS ABOUT..."
-                      className="min-h-[120px] border-4 border-foreground bg-muted/10 font-bold uppercase focus-visible:ring-0"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
-                <h3 className="text-3xl font-black uppercase italic">Collaboration</h3>
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Add Collaborator (User ID or Email)</Label>
-                    <div className="flex gap-4">
-                      <Input 
-                        value={newCollaborator}
-                        onChange={(e) => setNewCollaborator(e.target.value)}
-                        placeholder="USER ID OR EMAIL..."
-                        className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
-                      />
-                      <Button 
-                        onClick={() => {
-                          if (newCollaborator && !collaborators.includes(newCollaborator)) {
-                            setCollaborators([...collaborators, newCollaborator]);
-                            setNewCollaborator('');
-                            toast.success('Collaborator added');
-                          }
-                        }}
-                        className="h-14 px-8 border-4 border-foreground bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-black uppercase italic"
-                      >
-                        Add
-                      </Button>
-                    </div>
-                  </div>
-
-                  {collaborators.length > 0 && (
-                    <div className="space-y-4">
-                      <Label className="text-sm font-black uppercase tracking-widest ml-1">Current Collaborators</Label>
-                      <div className="grid gap-3">
-                        {collaborators.map((c) => (
-                          <div key={c} className="flex items-center justify-between p-4 border-4 border-foreground bg-muted/10">
-                            <span className="font-bold uppercase">{c}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => setCollaborators(collaborators.filter(col => col !== c))}
-                              className="h-10 w-10 hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+              </section>
+            </motion.div>
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-12">
-            <div className="max-w-4xl mx-auto">
-              <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
-                <h3 className="text-3xl font-black uppercase italic">Form Settings</h3>
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="font-black text-xl uppercase italic">Custom Slug</Label>
-                    <div className="flex items-center gap-2">
-                      <div className="px-4 py-2 border-4 border-foreground bg-muted font-bold">formora.com/f/</div>
-                      <div className="relative flex-1">
-                        <Input 
-                          value={slug}
-                          onChange={(e) => {
-                            const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-                            setSlug(val);
-                          }}
-                          placeholder="your-custom-slug"
-                          className={cn(
-                            "h-12 border-4 border-foreground bg-muted/30 text-xl font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors",
-                            slugError ? "border-destructive" : ""
-                          )}
-                        />
-                        {isSlugValidating && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {slugError ? (
-                      <p className="text-destructive font-bold uppercase text-xs">{slugError}</p>
-                    ) : (
-                      <p className="text-muted-foreground font-bold uppercase text-xs">Leave empty to use the form ID</p>
-                    )}
+          <TabsContent value="settings" className="mt-0">
+            <motion.div 
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24"
+            >
+              <div className="lg:col-span-8 space-y-16">
+                <section className="space-y-8">
+                  <div className="flex items-center justify-between pb-4 border-b border-muted">
+                    <h3 className="text-[10px] uppercase tracking-[0.5em] opacity-40">Access & Distribution</h3>
+                    <span className="text-[9px] font-mono opacity-20">PUBLIC</span>
                   </div>
-
-                  <div className="flex items-center justify-between p-6 border-4 border-foreground bg-muted/30">
-                    <div>
-                      <div className="font-black text-xl uppercase italic">Limit to 1 response</div>
-                      <div className="text-muted-foreground font-bold uppercase text-sm">Uses IP-based check and local storage</div>
+                  
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="p-8 border border-muted/60 bg-muted/5 space-y-6"
+                  >
+                    <div className="flex items-center gap-3 text-[9px] uppercase tracking-[0.3em] opacity-40">
+                      <Globe className="w-3 h-3" />
+                      <span>Public URL</span>
                     </div>
-                    <Checkbox 
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm opacity-30 font-mono">formora.com/f/</span>
+                      <Input 
+                        value={slug}
+                        onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                        placeholder="your-form-slug"
+                        className="flex-1 h-12 !border-muted focus:!border-ink font-heading italic text-lg bg-transparent"
+                      />
+                    </div>
+                    {slug && (
+                      <p className="text-[10px] font-mono opacity-30">
+                        → formora.com/f/{slug}
+                      </p>
+                    )}
+                  </motion.div>
+
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="flex items-center justify-between p-6 border border-muted/60 bg-muted/5 group hover:border-muted transition-colors"
+                  >
+                    <div className="space-y-1">
+                      <div className="text-[11px] uppercase tracking-[0.2em] font-medium flex items-center gap-2">
+                        <Shield className="w-3 h-3 opacity-40" />
+                        Single Response Mode
+                      </div>
+                      <div className="text-[10px] opacity-40">Limit each user to one submission</div>
+                    </div>
+                    <Switch 
                       checked={limitOneResponse}
-                      onCheckedChange={(checked) => setLimitOneResponse(!!checked)}
-                      className="w-8 h-8 border-4 border-foreground data-[state=checked]:bg-primary" 
+                      onCheckedChange={setLimitOneResponse}
                     />
+                  </motion.div>
+                </section>
+
+                <section className="space-y-8">
+                  <div className="flex items-center justify-between pb-4 border-b border-muted">
+                    <h3 className="text-[10px] uppercase tracking-[0.5em] opacity-40">Extensions</h3>
+                    <span className="text-[9px] font-mono opacity-20">3 AVAILABLE</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      { href: `/dashboard/forms/${formId}/analytics`, icon: BarChart3, label: 'Analytics', desc: 'Response metrics & insights' },
+                      { href: `/dashboard/forms/${formId}/conditional-logic`, icon: Zap, label: 'Logic Flows', desc: 'Conditional branching rules' },
+                      { href: `/dashboard/forms/${formId}/integrations`, icon: Globe, label: 'Integrations', desc: 'Webhooks & notifications' },
+                    ].map((item, idx) => (
+                      <motion.div
+                        key={item.label}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 + idx * 0.05 }}
+                      >
+                        <Link 
+                          href={item.href} 
+                          className="group flex flex-col p-6 border border-muted/60 hover:border-ink bg-transparent hover:bg-muted/5 transition-all h-full"
+                        >
+                          <div className="w-10 h-10 border border-muted/40 flex items-center justify-center mb-6 group-hover:border-ink/30 transition-colors">
+                            <item.icon className="w-4 h-4 opacity-30 group-hover:opacity-80 transition-opacity" />
+                          </div>
+                          <h4 className="text-[11px] uppercase tracking-[0.2em] font-medium mb-2">{item.label}</h4>
+                          <p className="text-[10px] opacity-30 group-hover:opacity-50 transition-opacity">{item.desc}</p>
+                          <div className="mt-auto pt-6">
+                            <span className="text-[9px] uppercase tracking-[0.2em] opacity-0 group-hover:opacity-40 transition-opacity">Configure →</span>
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                </section>
+              </div>
+
+              <div className="lg:col-span-4">
+                <div className="sticky top-32 p-6 border border-dashed border-muted/40 bg-muted/5">
+                  <div className="text-[9px] uppercase tracking-[0.3em] opacity-30 mb-4">Quick Actions</div>
+                  <div className="space-y-2">
+                    <Button variant="outline" size="sm" className="w-full justify-start text-[10px] uppercase tracking-[0.2em]" asChild>
+                      <Link href={`/f/${slug || formId}`} target="_blank">
+                        <Eye className="w-3 h-3 mr-2" />
+                        Preview Form
+                      </Link>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full justify-start text-[10px] uppercase tracking-[0.2em]"
+                      onClick={() => {
+                        const url = `${window.location.origin}/f/${slug || formId}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success('Form link copied!');
+                      }}
+                    >
+                      <Copy className="w-3 h-3 mr-2" />
+                      Copy Link
+                    </Button>
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </TabsContent>
         </Tabs>
       </main>

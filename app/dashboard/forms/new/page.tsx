@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { useUser } from '@stackframe/stack';
 import { v4 as uuidv4 } from 'uuid';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -46,7 +48,9 @@ import {
   AlertCircle,
   GitBranch,
   Calculator,
-  Settings
+  Settings,
+  Globe,
+  Shield
 } from 'lucide-react';
 import Link from 'next/link';
 import { 
@@ -165,94 +169,94 @@ function SortableQuestion({
     <div 
       ref={setNodeRef} 
       style={style} 
-      className="group relative border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all overflow-hidden"
+      className="group relative border border-muted bg-card transition-all overflow-hidden"
     >
       <div 
         {...attributes} 
         {...listeners}
-        className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 cursor-grab active:cursor-grabbing p-2 border-4 border-foreground bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+        className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing bg-muted/30 border-r border-muted hover:bg-muted/50 transition-colors"
       >
-        <GripVertical className="w-6 h-6 stroke-[3]" />
+        <GripVertical className="w-4 h-4 opacity-40" />
       </div>
 
       <Tabs value={activeQuestionTab} onValueChange={setActiveQuestionTab} className="w-full">
-        <div className="flex items-center justify-between border-b-4 border-foreground bg-muted/30 px-6 py-2">
-          <TabsList className="h-10 border-2 border-foreground bg-background p-1">
-            <TabsTrigger value="content" className="font-black uppercase italic text-[10px] px-4 data-[state=active]:bg-primary data-[state=active]:text-white">
+        <div className="flex items-center justify-between border-b border-muted bg-muted/10 px-6 py-3 pl-12">
+          <TabsList className="h-8 bg-transparent p-0 gap-4">
+            <TabsTrigger value="content" className="rounded-none bg-transparent data-[state=active]:bg-transparent border-b-2 border-transparent data-[state=active]:border-ink text-[10px] uppercase tracking-[0.3em] px-0 pb-1">
               Content
             </TabsTrigger>
-            <TabsTrigger value="logic" className="font-black uppercase italic text-[10px] px-4 data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsTrigger value="logic" className="rounded-none bg-transparent data-[state=active]:bg-transparent border-b-2 border-transparent data-[state=active]:border-ink text-[10px] uppercase tracking-[0.3em] px-0 pb-1">
               Logic
             </TabsTrigger>
           </TabsList>
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 border-2 border-foreground bg-primary text-white flex items-center justify-center font-black italic text-xs shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex items-center gap-3">
+            <span className="w-6 h-6 flex items-center justify-center text-[10px] font-heading italic opacity-40">
               {index + 1}
             </span>
-            <div className="px-3 py-1 border-2 border-foreground bg-muted text-[8px] font-black uppercase tracking-widest">
+            <div className="px-2 py-1 bg-muted text-[9px] uppercase tracking-[0.3em] opacity-60">
               {question.type.replace('_', ' ')}
             </div>
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => duplicateQuestion(question.id)}
-              className="h-8 w-8 hover:text-primary transition-all"
+              className="h-7 w-7 opacity-40 hover:opacity-100 transition-all"
               title="Duplicate Question"
             >
-              <Copy className="w-4 h-4 stroke-[2]" />
+              <Copy className="w-3.5 h-3.5" />
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={() => deleteQuestion(question.id)}
-              className="h-8 w-8 hover:text-destructive transition-all"
+              className="h-7 w-7 opacity-40 hover:opacity-100 hover:text-destructive transition-all"
               title="Delete Question"
             >
-              <Trash2 className="w-4 h-4 stroke-[2]" />
+              <Trash2 className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
 
-        <TabsContent value="content" className="p-8 mt-0 space-y-6">
+        <TabsContent value="content" className="p-8 pl-12 mt-0 space-y-6">
           <div className="space-y-4">
             <Input 
               value={question.title}
               onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
-              placeholder="ENTER YOUR QUESTION..."
-              className="h-12 border-4 border-foreground bg-muted/30 text-xl font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+              placeholder="Enter your question..."
+              className="h-12 border-muted bg-transparent text-lg font-heading italic focus-visible:ring-0 focus-visible:border-ink transition-colors"
             />
             <Textarea 
               value={question.description}
               onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
-              placeholder="ADD A DESCRIPTION (OPTIONAL)..."
-              className="min-h-[80px] border-4 border-foreground bg-muted/10 font-bold uppercase focus-visible:ring-0"
+              placeholder="Add a description (optional)..."
+              className="min-h-[80px] border-muted bg-transparent text-sm opacity-60 focus-visible:ring-0"
             />
             {(question.type === 'short_text' || question.type === 'long_text' || question.type === 'email' || question.type === 'number') && (
               <Input 
                 value={question.placeholder || ''}
                 onChange={(e) => updateQuestion(question.id, { placeholder: e.target.value })}
-                placeholder="INPUT PLACEHOLDER (OPTIONAL)..."
-                className="h-10 border-2 border-foreground bg-muted/5 font-bold uppercase italic focus-visible:ring-0"
+                placeholder="Input placeholder (optional)..."
+                className="h-10 border-muted bg-muted/5 text-sm focus-visible:ring-0"
               />
             )}
           </div>
 
           {(question.type === 'multiple_choice' || question.type === 'checkboxes' || question.type === 'dropdown') && (
-            <div className="space-y-4 border-l-4 border-foreground/10 pl-6 py-2">
-              <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Choice Options</div>
+            <div className="space-y-4 border-l border-muted pl-6 py-2">
+              <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-4">Choice Options</div>
               {question.options?.map((option) => (
                 <div key={option.id} className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-2 border-foreground bg-muted shrink-0" />
+                  <div className="w-1 h-1 bg-foreground opacity-40 shrink-0" />
                   <Input 
                     value={option.label}
                     onChange={(e) => updateOption(question.id, option.id, e.target.value)}
-                    className="h-10 border-2 border-foreground bg-card font-bold uppercase"
+                    className="h-10 border-muted bg-card text-sm"
                   />
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     onClick={() => deleteOption(question.id, option.id)}
-                    className="h-10 w-10 hover:text-destructive shrink-0"
+                    className="h-10 w-10 opacity-40 hover:opacity-100 hover:text-destructive shrink-0"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -262,41 +266,42 @@ function SortableQuestion({
                 variant="outline" 
                 size="sm" 
                 onClick={() => addOption(question.id)}
-                className="mt-4 border-2 border-foreground bg-card shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all font-black uppercase italic text-[10px]"
+                className="mt-4 border-muted text-[10px] uppercase tracking-[0.2em]"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-3 h-3 mr-2" />
                 Add Option
               </Button>
             </div>
           )}
 
-          <div className="pt-4 border-t-2 border-foreground/5 flex items-center gap-6">
+          <div className="pt-4 border-t border-muted flex items-center gap-6">
             <div className="flex items-center gap-3">
               <Checkbox 
                 id={`req-${question.id}`} 
                 checked={question.required}
                 onCheckedChange={(checked) => updateQuestion(question.id, { required: !!checked })}
-                className="w-6 h-6 border-4 border-foreground data-[state=checked]:bg-primary"
+                className="w-5 h-5 border-muted data-[state=checked]:bg-ink"
               />
-              <Label htmlFor={`req-${question.id}`} className="font-black uppercase italic text-xs cursor-pointer">Required Question</Label>
+              <Label htmlFor={`req-${question.id}`} className="text-[10px] uppercase tracking-[0.2em] cursor-pointer opacity-60">Required Question</Label>
             </div>
           </div>
         </TabsContent>
 
-        <TabsContent value="logic" className="p-8 mt-0 space-y-8 animate-in fade-in slide-in-from-top-4">
+        <TabsContent value="logic" className="p-8 pl-12 mt-0 space-y-8 animate-in fade-in slide-in-from-top-4">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-xl font-black uppercase italic flex items-center gap-2">
-                  <GitBranch className="w-5 h-5 text-primary" />
+                <h4 className="text-lg font-heading italic flex items-center gap-2">
+                  <GitBranch className="w-4 h-4 opacity-40" />
                   Jump Logic
                 </h4>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">Control the path of your form based on answers.</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Control the path of your form based on answers.</p>
               </div>
               <Button
                 size="sm"
+                variant="outline"
                 onClick={addLogicJump}
-                className="border-4 border-foreground bg-card text-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all font-black uppercase italic text-[10px]"
+                className="border-muted text-[10px] uppercase tracking-[0.2em]"
               >
                 <Plus className="w-3 h-3 mr-2" />
                 Add Jump
@@ -304,25 +309,25 @@ function SortableQuestion({
             </div>
 
             {(!question.logicJumps || question.logicJumps.length === 0) ? (
-              <div className="p-8 border-4 border-foreground border-dashed bg-muted/5 text-center">
-                <p className="font-black uppercase italic text-xs text-muted-foreground">No logic jumps defined. This question will always lead to the next one.</p>
+              <div className="p-8 border border-dashed border-muted bg-muted/5 text-center">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">No logic jumps defined. This question will always lead to the next one.</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {(question.logicJumps || []).map((jump, jIndex) => (
-                  <div key={jump.id} className="p-6 border-4 border-foreground bg-muted/10 space-y-4 relative">
+                  <div key={jump.id} className="p-6 border border-muted bg-muted/5 space-y-4 relative">
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => removeLogicJump(jump.id)}
-                      className="absolute top-2 right-2 h-8 w-8 hover:text-destructive"
+                      className="absolute top-2 right-2 h-8 w-8 opacity-40 hover:opacity-100 hover:text-destructive"
                     >
                       <XCircle className="w-4 h-4" />
                     </Button>
 
-                    <div className="flex flex-wrap items-center gap-3 font-black uppercase italic text-xs">
-                      <span className="bg-foreground text-white px-2 py-0.5">IF</span>
-                      <span>ANSWER</span>
+                    <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.2em]">
+                      <span className="bg-ink text-bg px-2 py-0.5">If</span>
+                      <span className="opacity-60">Answer</span>
                       <Select 
                         value={jump.conditions[0]?.operator || 'equals'}
                         onValueChange={(val) => {
@@ -332,7 +337,7 @@ function SortableQuestion({
                           updateLogicJump(jump.id, { conditions: conds });
                         }}
                       >
-                        <SelectTrigger className="w-[140px] h-8 border-2 border-foreground bg-card text-[10px] font-black uppercase">
+                        <SelectTrigger className="w-[140px] h-8 border-muted bg-card text-[10px] uppercase tracking-[0.1em]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -350,11 +355,11 @@ function SortableQuestion({
                           else conds.push({ id: uuidv4(), questionId: question.id, operator: 'equals', value: e.target.value });
                           updateLogicJump(jump.id, { conditions: conds });
                         }}
-                        className="h-8 w-[150px] border-2 border-foreground bg-card text-[10px] font-black uppercase"
-                        placeholder="VALUE..."
+                        className="h-8 w-[150px] border-muted bg-card text-sm"
+                        placeholder="Value..."
                       />
-                      <span className="bg-primary text-white px-2 py-0.5">THEN</span>
-                      <span className="bg-foreground text-white px-2 py-0.5">JUMP TO</span>
+                      <span className="bg-muted px-2 py-0.5">Then</span>
+                      <span className="opacity-60">Jump to</span>
                       <Select 
                         value={jump.destinationQuestionId || ''}
                         onValueChange={(val) => updateLogicJump(jump.id, { 
@@ -362,8 +367,8 @@ function SortableQuestion({
                           destinationQuestionId: val === 'end' ? undefined : val 
                         })}
                       >
-                        <SelectTrigger className="w-[200px] h-8 border-2 border-foreground bg-card text-[10px] font-black uppercase">
-                          <SelectValue placeholder="SELECT QUESTION" />
+                        <SelectTrigger className="w-[200px] h-8 border-muted bg-card text-[10px] uppercase tracking-[0.1em]">
+                          <SelectValue placeholder="Select question" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="end">End of Form</SelectItem>
@@ -383,22 +388,23 @@ function SortableQuestion({
             )}
 
             {question.type === 'number' && (
-              <div className="pt-8 border-t-4 border-foreground/10 space-y-6">
+              <div className="pt-8 border-t border-muted space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xl font-black uppercase italic flex items-center gap-2">
-                      <Calculator className="w-5 h-5 text-primary" />
+                    <h4 className="text-lg font-heading italic flex items-center gap-2">
+                      <Calculator className="w-4 h-4 opacity-40" />
                       Calculations
                     </h4>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase">Update other fields based on this numeric answer.</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Update other fields based on this numeric answer.</p>
                   </div>
                   <Button
                     size="sm"
+                    variant="outline"
                     onClick={() => {
                       const newCalc: CalculationRule = { id: uuidv4(), formula: '', targetQuestionId: '' };
                       updateQuestion(question.id, { calculations: [...(question.calculations || []), newCalc] });
                     }}
-                    className="border-4 border-foreground bg-card text-foreground shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all font-black uppercase italic text-[10px]"
+                    className="border-muted text-[10px] uppercase tracking-[0.2em]"
                   >
                     <Plus className="w-3 h-3 mr-2" />
                     Add Calc
@@ -406,24 +412,24 @@ function SortableQuestion({
                 </div>
 
                 {(!question.calculations || question.calculations.length === 0) ? (
-                  <div className="p-8 border-4 border-foreground border-dashed bg-muted/5 text-center">
-                    <p className="font-black uppercase italic text-xs text-muted-foreground">No calculations defined for this numeric field.</p>
+                  <div className="p-8 border border-dashed border-muted bg-muted/5 text-center">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">No calculations defined for this numeric field.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {question.calculations.map((calc, cIndex) => (
-                      <div key={calc.id} className="p-6 border-4 border-foreground bg-muted/10 space-y-4 relative">
+                      <div key={calc.id} className="p-6 border border-muted bg-muted/5 space-y-4 relative">
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => updateQuestion(question.id, { calculations: question.calculations?.filter(c => c.id !== calc.id) })}
-                          className="absolute top-2 right-2 h-8 w-8 hover:text-destructive"
+                          className="absolute top-2 right-2 h-8 w-8 opacity-40 hover:opacity-100 hover:text-destructive"
                         >
                           <XCircle className="w-4 h-4" />
                         </Button>
 
-                        <div className="flex flex-wrap items-center gap-3 font-black uppercase italic text-xs">
-                          <span className="bg-foreground text-white px-2 py-0.5">SET</span>
+                        <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.2em]">
+                          <span className="bg-ink text-bg px-2 py-0.5">Set</span>
                           <Select 
                             value={calc.targetQuestionId}
                             onValueChange={(val) => {
@@ -432,8 +438,8 @@ function SortableQuestion({
                               updateQuestion(question.id, { calculations: calcs });
                             }}
                           >
-                            <SelectTrigger className="w-[180px] h-8 border-2 border-foreground bg-card text-[10px] font-black uppercase">
-                              <SelectValue placeholder="TARGET FIELD" />
+                            <SelectTrigger className="w-[180px] h-8 border-muted bg-card text-[10px] uppercase tracking-[0.1em]">
+                              <SelectValue placeholder="Target field" />
                             </SelectTrigger>
                             <SelectContent>
                               {allQuestions
@@ -445,7 +451,7 @@ function SortableQuestion({
                                 ))}
                             </SelectContent>
                           </Select>
-                          <span className="bg-primary text-white px-2 py-0.5">TO</span>
+                          <span className="bg-muted px-2 py-0.5">To</span>
                           <Input 
                             value={calc.formula}
                             onChange={(e) => {
@@ -453,11 +459,11 @@ function SortableQuestion({
                               calcs[cIndex].formula = e.target.value;
                               updateQuestion(question.id, { calculations: calcs });
                             }}
-                            className="h-8 flex-1 min-w-[200px] border-2 border-foreground bg-card text-[10px] font-black uppercase"
-                            placeholder="FORMULA (e.g. {{self}} * 1.1)"
+                            className="h-8 flex-1 min-w-[200px] border-muted bg-card text-sm"
+                            placeholder="Formula (e.g. {{self}} * 1.1)"
                           />
                         </div>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase opacity-70">Use {"{{self}}"} for this question's value, or {"{{qID}}"} for others.</p>
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-[0.2em] opacity-60">Use {"{{self}}"} for this question's value, or {"{{qID}}"} for others.</p>
                       </div>
                     ))}
                   </div>
@@ -767,17 +773,17 @@ export default function NewFormPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-bg font-body">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b-4 border-foreground p-4">
+      <header className="sticky top-0 z-50 bg-bg/95 backdrop-blur-sm border-b border-muted px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Button variant="ghost" size="icon" className="h-12 w-12 border-2 border-transparent hover:border-foreground hover:bg-muted transition-all" asChild>
+            <Button variant="ghost" size="icon" className="h-10 w-10 opacity-40 hover:opacity-100 transition-opacity" asChild>
               <Link href="/dashboard/forms">
-                <ArrowLeft className="w-6 h-6 stroke-[3]" />
+                <ArrowLeft className="w-5 h-5" />
               </Link>
             </Button>
-            <div className="h-10 w-1 bg-foreground/10 hidden sm:block" />
+            <div className="h-6 w-px bg-muted hidden sm:block" />
             <div className="hidden sm:block">
               {isEditingTitle ? (
                 <div className="flex items-center gap-2">
@@ -787,7 +793,7 @@ export default function NewFormPage() {
                     onBlur={() => setIsEditingTitle(false)}
                     onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
                     autoFocus
-                    className="h-8 w-[200px] border-2 border-foreground bg-card font-black uppercase italic text-sm"
+                    className="h-8 w-[200px] border-muted bg-transparent font-heading italic text-lg"
                   />
                 </div>
               ) : (
@@ -795,14 +801,14 @@ export default function NewFormPage() {
                   className="group flex items-center gap-2 cursor-pointer"
                   onClick={() => setIsEditingTitle(true)}
                 >
-                  <h1 className="text-xl font-black uppercase italic truncate max-w-[200px]">
-                    {title || 'UNTITLED FORM'}
+                  <h1 className="text-xl font-heading italic tracking-tight truncate max-w-[200px]">
+                    {title || 'Untitled Narrative'}
                   </h1>
-                  <Edit3 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Edit3 className="w-3 h-3 opacity-0 group-hover:opacity-40 transition-opacity" />
                 </div>
               )}
-              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
-                DRAFT SAVED
+              <p className="text-[10px] uppercase tracking-[0.3em] opacity-40">
+                Draft
               </p>
             </div>
           </div>
@@ -811,35 +817,46 @@ export default function NewFormPage() {
             <Button 
               variant="outline" 
               onClick={handlePreview}
-              className="h-12 px-6 border-4 border-foreground bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-black uppercase italic"
+              size="lg"
+              className="h-12"
             >
-              <Eye className="w-5 h-5 mr-2 stroke-[3]" />
+              <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
             <Button 
               onClick={handleSave} 
               disabled={saving}
-              className="h-12 px-8 border-4 border-foreground bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-black uppercase italic"
+              size="lg"
+              className="h-12"
             >
-              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 mr-2 stroke-[3]" />}
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Publish
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto p-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-12">
-          <div className="flex justify-center">
-            <TabsList className="h-16 p-2 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-              <TabsTrigger value="build" className="h-full px-8 font-black uppercase italic data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                1. Build
+      <main className="max-w-7xl mx-auto px-6 py-12">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-16">
+          <div className="flex justify-center border-b border-muted">
+            <TabsList className="h-auto p-0 bg-transparent flex gap-8">
+              <TabsTrigger 
+                value="build" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-ink data-[state=active]:bg-transparent text-[10px] uppercase tracking-[0.3em] font-medium pb-4"
+              >
+                Structure
               </TabsTrigger>
-              <TabsTrigger value="design" className="h-full px-8 font-black uppercase italic data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                2. Design
+              <TabsTrigger 
+                value="design" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-ink data-[state=active]:bg-transparent text-[10px] uppercase tracking-[0.3em] font-medium pb-4"
+              >
+                Appearance
               </TabsTrigger>
-              <TabsTrigger value="settings" className="h-full px-8 font-black uppercase italic data-[state=active]:bg-primary data-[state=active]:text-white transition-all">
-                3. Settings
+              <TabsTrigger 
+                value="settings" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-ink data-[state=active]:bg-transparent text-[10px] uppercase tracking-[0.3em] font-medium pb-4"
+              >
+                Configuration
               </TabsTrigger>
             </TabsList>
           </div>
@@ -847,15 +864,12 @@ export default function NewFormPage() {
           <TabsContent value="build" className="space-y-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
               {/* Left: Question List */}
-              <div className="lg:col-span-8 space-y-8">
+              <div className="lg:col-span-8 space-y-6">
                 {questions.length === 0 ? (
-                  <div className="py-32 text-center border-4 border-foreground border-dashed bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-12">
-                    <div className="w-24 h-24 border-4 border-foreground bg-muted flex items-center justify-center mx-auto mb-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-                      <Plus className="w-12 h-12 text-muted-foreground stroke-[3]" />
-                    </div>
-                    <h2 className="text-3xl font-black mb-4 uppercase italic">Your form is empty</h2>
-                    <p className="text-muted-foreground max-w-md mx-auto text-lg font-bold uppercase">
-                      Add your first question from the sidebar to start building.
+                  <div className="py-32 text-center border border-muted border-dashed space-y-8">
+                    <h2 className="text-4xl font-heading tracking-tight italic opacity-60">Begin your narrative</h2>
+                    <p className="text-sm opacity-40 max-w-sm mx-auto leading-relaxed">
+                      Add your first question from the sidebar to start composing your form.
                     </p>
                   </div>
                 ) : (
@@ -891,18 +905,18 @@ export default function NewFormPage() {
 
               {/* Right: Question Types Sidebar */}
               <div className="lg:col-span-4 space-y-8">
-                <div className="sticky top-32 p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                  <h3 className="text-2xl font-black uppercase italic mb-6">Add Question</h3>
-                  <div className="grid grid-cols-1 gap-3">
+                <div className="sticky top-32 p-6 border border-muted">
+                  <h3 className="text-[10px] uppercase tracking-[0.3em] opacity-40 font-medium mb-6">Add Element</h3>
+                  <div className="grid grid-cols-1 gap-2">
                     {questionTypes.map((type) => (
                       <Button
                         key={type.value}
-                        variant="outline"
+                        variant="ghost"
                         onClick={() => addQuestion(type.value)}
-                        className="h-14 justify-start border-4 border-foreground bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-black uppercase italic text-sm"
+                        className="h-12 justify-start px-4 hover:bg-muted/10 transition-all"
                       >
-                        <type.icon className="w-5 h-5 mr-4 stroke-[3] text-primary" />
-                        {type.label}
+                        <type.icon className="w-4 h-4 mr-3 opacity-40" />
+                        <span className="text-sm">{type.label}</span>
                       </Button>
                     ))}
                   </div>
@@ -913,9 +927,12 @@ export default function NewFormPage() {
 
           <TabsContent value="design" className="space-y-12">
             <div className="max-w-4xl mx-auto space-y-12">
-              <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
-                <h3 className="text-3xl font-black uppercase italic">Choose Style</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              <div className="p-8 border border-muted space-y-8">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.3em] opacity-40 mb-2">Style</p>
+                  <h3 className="text-2xl font-heading italic">Choose a Style</h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                   {(['classic', 'conversational', 'marketing', 'neo_brutalism', 'minimal'] as FormStyle[]).map((s) => {
                     const Icon = styleIcons[s];
                     return (
@@ -923,112 +940,115 @@ export default function NewFormPage() {
                         key={s}
                         onClick={() => setStyle(s)}
                         className={cn(
-                          "p-8 border-4 border-foreground transition-all flex flex-col items-center text-center gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none",
-                          style === s ? "bg-primary text-white" : "bg-card"
+                          "p-6 border transition-all flex flex-col items-center text-center gap-3",
+                          style === s ? "border-ink bg-muted/20" : "border-muted hover:bg-muted/10"
                         )}
                       >
-                        <Icon className={cn("w-12 h-12 stroke-[3]", style === s ? "text-white" : "text-primary")} />
-                        <div className="font-black uppercase italic text-xs">{s.replace('_', ' ')}</div>
+                        <Icon className={cn("w-8 h-8", style === s ? "opacity-100" : "opacity-40")} />
+                        <div className="text-[10px] uppercase tracking-[0.2em]">{s.replace('_', ' ')}</div>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
+              <div className="p-8 border border-muted space-y-8">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-3xl font-black uppercase italic">Customization</h3>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.3em] opacity-40 mb-2">Customize</p>
+                    <h3 className="text-2xl font-heading italic">Appearance</h3>
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleResetDesign}
-                    className="border-2 border-foreground font-black uppercase italic text-xs h-8 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+                    className="border-muted text-[10px] uppercase tracking-[0.2em]"
                   >
                     <RotateCcw className="w-3 h-3 mr-2" />
-                    Reset to Default
+                    Reset
                   </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Primary Color</Label>
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-60">Primary Color</Label>
                     <div className="flex gap-4">
                       <Input 
                         type="color"
                         value={primaryColor}
                         onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="h-14 w-24 border-4 border-foreground bg-muted/30 p-1 cursor-pointer"
+                        className="h-12 w-16 border-muted bg-muted/30 p-1 cursor-pointer"
                       />
                       <Input 
                         value={primaryColor}
                         onChange={(e) => setPrimaryColor(e.target.value)}
                         placeholder="#000000"
-                        className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                        className="h-12 border-muted bg-transparent font-mono text-sm focus-visible:ring-0 focus-visible:border-ink transition-colors"
                       />
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Background Color</Label>
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-60">Background Color</Label>
                     <div className="flex gap-4">
                       <Input 
                         type="color"
                         value={backgroundColor}
                         onChange={(e) => setBackgroundColor(e.target.value)}
-                        className="h-14 w-24 border-4 border-foreground bg-muted/30 p-1 cursor-pointer"
+                        className="h-12 w-16 border-muted bg-muted/30 p-1 cursor-pointer"
                       />
                       <Input 
                         value={backgroundColor}
                         onChange={(e) => setBackgroundColor(e.target.value)}
                         placeholder="#FFFFFF"
-                        className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                        className="h-12 border-muted bg-transparent font-mono text-sm focus-visible:ring-0 focus-visible:border-ink transition-colors"
                       />
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Text Color</Label>
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-60">Text Color</Label>
                     <div className="flex gap-4">
                       <Input 
                         type="color"
                         value={textColor}
                         onChange={(e) => setTextColor(e.target.value)}
-                        className="h-14 w-24 border-4 border-foreground bg-muted/30 p-1 cursor-pointer"
+                        className="h-12 w-16 border-muted bg-muted/30 p-1 cursor-pointer"
                       />
                       <Input 
                         value={textColor}
                         onChange={(e) => setTextColor(e.target.value)}
                         placeholder="#000000"
-                        className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                        className="h-12 border-muted bg-transparent font-mono text-sm focus-visible:ring-0 focus-visible:border-ink transition-colors"
                       />
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Font Family</Label>
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-60">Font Family</Label>
                     <Select value={fontFamily} onValueChange={setFontFamily}>
-                      <SelectTrigger className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus:ring-0">
-                        <SelectValue placeholder="SELECT FONT" />
+                      <SelectTrigger className="h-12 border-muted bg-transparent text-sm focus:ring-0">
+                        <SelectValue placeholder="Select font" />
                       </SelectTrigger>
-                      <SelectContent className="border-4 border-foreground p-2">
-                        <SelectItem value="sans" className="font-sans font-black uppercase italic">Sans Serif (Inter)</SelectItem>
-                        <SelectItem value="serif" className="font-serif font-black uppercase italic">Serif (Playfair)</SelectItem>
-                        <SelectItem value="mono" className="font-mono font-black uppercase italic">Monospace (JetBrains)</SelectItem>
-                        <SelectItem value="heading" className="font-black uppercase italic">Heading (Impact Style)</SelectItem>
+                      <SelectContent className="border-muted">
+                        <SelectItem value="sans" className="font-sans">Sans Serif (Inter)</SelectItem>
+                        <SelectItem value="serif" className="font-serif">Serif (Playfair)</SelectItem>
+                        <SelectItem value="mono" className="font-mono">Monospace (JetBrains)</SelectItem>
+                        <SelectItem value="heading">Heading (Impact Style)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   
                   <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Submit Button Text</Label>
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-60">Submit Button Text</Label>
                     <Input 
                       value={buttonText}
                       onChange={(e) => setButtonText(e.target.value)}
-                      placeholder="SUBMIT"
-                      className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                      placeholder="Submit"
+                      className="h-12 border-muted bg-transparent text-sm focus-visible:ring-0 focus-visible:border-ink transition-colors"
                     />
                   </div>
 
                   {style === 'conversational' && (
                     <div className="space-y-3">
-                      <Label className="text-sm font-black uppercase tracking-widest ml-1">Animation Speed ({animationSpeed}s)</Label>
-                      <div className="flex items-center gap-4 h-14 border-4 border-foreground bg-muted/30 px-4">
+                      <Label className="text-[10px] uppercase tracking-[0.3em] opacity-60">Animation Speed ({animationSpeed}s)</Label>
+                      <div className="flex items-center gap-4 h-12 border border-muted bg-muted/10 px-4 rounded-sm">
                         <input 
                           type="range" 
                           min="0.1" 
@@ -1036,17 +1056,17 @@ export default function NewFormPage() {
                           step="0.1"
                           value={animationSpeed}
                           onChange={(e) => setAnimationSpeed(parseFloat(e.target.value))}
-                          className="flex-1 accent-primary"
+                          className="flex-1 accent-ink"
                         />
                       </div>
                     </div>
                   )}
 
                   <div className="col-span-full space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Background Image</Label>
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-60">Background Image</Label>
                     <div className="flex items-center gap-6">
                       {backgroundImage ? (
-                        <div className="relative w-40 h-24 border-4 border-foreground group overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                        <div className="relative w-40 h-24 border border-muted group overflow-hidden">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
                             src={backgroundImage} 
@@ -1062,11 +1082,11 @@ export default function NewFormPage() {
                         </div>
                       ) : (
                         <div className="flex-1">
-                          <label className="flex flex-col items-center justify-center w-full h-32 border-4 border-dashed border-foreground bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer group">
+                          <label className="flex flex-col items-center justify-center w-full h-32 border border-dashed border-muted bg-muted/5 hover:bg-muted/10 transition-colors cursor-pointer group">
                             <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                              <ImagePlus className="w-10 h-10 mb-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                              <p className="text-xs font-black uppercase italic">
-                                {isUploadingImage ? 'UPLOADING...' : 'CLICK TO UPLOAD BACKGROUND IMAGE'}
+                              <ImagePlus className="w-8 h-8 mb-3 opacity-40 group-hover:opacity-60 transition-opacity" />
+                              <p className="text-[10px] uppercase tracking-[0.2em] opacity-60">
+                                {isUploadingImage ? 'Uploading...' : 'Click to upload background image'}
                               </p>
                             </div>
                             <input 
@@ -1080,48 +1100,54 @@ export default function NewFormPage() {
                         </div>
                       )}
                     </div>
-                    <p className="text-[10px] font-black uppercase text-muted-foreground ml-1">Works best with Marketing style, but can be applied to any style</p>
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground">Works best with Marketing style, but can be applied to any style</p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
-                <h3 className="text-3xl font-black uppercase italic">Form Info</h3>
+              <div className="p-8 border border-muted/60 bg-muted/5 space-y-8">
+                <div className="flex items-center justify-between pb-4 border-b border-muted">
+                  <h3 className="text-[10px] uppercase tracking-[0.5em] opacity-40">Narrative Details</h3>
+                </div>
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Form Title</Label>
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-50">Form Title</Label>
                     <Input 
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="E.G. CUSTOMER FEEDBACK"
-                      className="h-14 border-4 border-foreground bg-muted/30 text-xl font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                      placeholder="e.g. Customer Feedback"
+                      className="h-12 !border-muted focus:!border-ink font-heading italic text-lg bg-transparent"
                     />
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Description</Label>
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-50">Description</Label>
                     <Textarea 
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="TELL YOUR AUDIENCE WHAT THIS FORM IS ABOUT..."
-                      className="min-h-[120px] border-4 border-foreground bg-muted/10 font-bold uppercase focus-visible:ring-0"
+                      placeholder="Tell your audience what this form is about..."
+                      className="min-h-[100px] !border-muted focus:!border-ink bg-transparent text-sm"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
-                <h3 className="text-3xl font-black uppercase italic">Collaboration</h3>
+              <div className="p-8 border border-muted/60 bg-muted/5 space-y-8">
+                <div className="flex items-center justify-between pb-4 border-b border-muted">
+                  <h3 className="text-[10px] uppercase tracking-[0.5em] opacity-40">Collaboration</h3>
+                  <span className="text-[9px] font-mono opacity-20">{collaborators.length} MEMBERS</span>
+                </div>
                 <div className="space-y-6">
                   <div className="space-y-3">
-                    <Label className="text-sm font-black uppercase tracking-widest ml-1">Add Collaborator (User ID or Email)</Label>
-                    <div className="flex gap-4">
+                    <Label className="text-[10px] uppercase tracking-[0.3em] opacity-50">Add Collaborator</Label>
+                    <div className="flex gap-3">
                       <Input 
                         value={newCollaborator}
                         onChange={(e) => setNewCollaborator(e.target.value)}
-                        placeholder="USER ID OR EMAIL..."
-                        className="h-14 border-4 border-foreground bg-muted/30 text-lg font-black uppercase italic focus-visible:ring-0 focus-visible:border-primary transition-colors"
+                        placeholder="User ID or email address"
+                        className="h-12 !border-muted focus:!border-ink font-heading italic bg-transparent"
                       />
                       <Button 
+                        variant="outline"
                         onClick={() => {
                           if (newCollaborator && !collaborators.includes(newCollaborator)) {
                             setCollaborators([...collaborators, newCollaborator]);
@@ -1129,7 +1155,7 @@ export default function NewFormPage() {
                             toast.success('Collaborator added');
                           }
                         }}
-                        className="h-14 px-8 border-4 border-foreground bg-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-black uppercase italic"
+                        className="h-12 px-6 text-[10px] uppercase tracking-[0.2em]"
                       >
                         Add
                       </Button>
@@ -1138,19 +1164,17 @@ export default function NewFormPage() {
 
                   {collaborators.length > 0 && (
                     <div className="space-y-4">
-                      <Label className="text-sm font-black uppercase tracking-widest ml-1">Current Collaborators</Label>
-                      <div className="grid gap-3">
+                      <Label className="text-[10px] uppercase tracking-[0.3em] opacity-50">Current Collaborators</Label>
+                      <div className="space-y-2">
                         {collaborators.map((c) => (
-                          <div key={c} className="flex items-center justify-between p-4 border-4 border-foreground bg-muted/10">
-                            <span className="font-bold uppercase">{c}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                          <div key={c} className="flex items-center justify-between p-4 border border-muted/60 bg-muted/5 group hover:border-muted transition-colors">
+                            <span className="text-sm font-mono opacity-70">{c}</span>
+                            <button 
                               onClick={() => setCollaborators(collaborators.filter(col => col !== c))}
-                              className="h-10 w-10 hover:text-destructive"
+                              className="opacity-30 hover:opacity-100 hover:text-destructive transition-opacity"
                             >
                               <Trash2 className="w-4 h-4" />
-                            </Button>
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -1161,70 +1185,88 @@ export default function NewFormPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="settings" className="space-y-12">
-            <div className="max-w-4xl mx-auto">
-              <div className="p-8 border-4 border-foreground bg-card shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] space-y-8">
-                <h3 className="text-3xl font-black uppercase italic">Form Settings</h3>
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <Label className="font-black text-xl uppercase italic">Custom Slug</Label>
-                    <div className="flex items-center gap-2">
-                      <div className="px-4 py-2 border-4 border-foreground bg-muted font-bold">formora.com/f/</div>
-                      <div className="relative flex-1">
-                        <Input 
-                          value={slug}
-                          onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                          placeholder="your-custom-slug"
-                          className={`h-12 border-4 border-foreground bg-muted/30 text-xl font-black uppercase italic focus-visible:ring-0 transition-colors ${
-                            slugError 
-                              ? "border-destructive focus-visible:border-destructive" 
-                              : slug && !isSlugValidating 
-                                ? "border-green-500 focus-visible:border-green-500" 
-                                : "focus-visible:border-primary"
-                          }`}
-                        />
-                        {isSlugValidating && (
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                          </div>
-                        )}
-                        {!isSlugValidating && slug && !slugError && (
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-green-500">
-                            <CheckCircle2 className="w-5 h-5" />
-                          </div>
-                        )}
-                        {!isSlugValidating && slug && slugError && (
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-destructive">
-                            <AlertCircle className="w-5 h-5" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {slugError ? (
-                      <p className="text-destructive font-black uppercase text-xs animate-in fade-in slide-in-from-top-1 ml-1">
-                        {slugError}
-                      </p>
-                    ) : (
-                      <p className="text-muted-foreground font-bold uppercase text-xs ml-1">
-                        Leave empty to use the form ID
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between p-6 border-4 border-foreground bg-muted/30">
-                    <div>
-                      <div className="font-black text-xl uppercase italic">Limit to 1 response</div>
-                      <div className="text-muted-foreground font-bold uppercase text-sm">Uses IP-based check and local storage</div>
-                    </div>
-                    <Checkbox 
-                      checked={limitOneResponse}
-                      onCheckedChange={(checked) => setLimitOneResponse(!!checked)}
-                      className="w-8 h-8 border-4 border-foreground data-[state=checked]:bg-primary" 
-                    />
-                  </div>
+          <TabsContent value="settings" className="mt-0">
+            <motion.div 
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="max-w-4xl space-y-16"
+            >
+              <section className="space-y-8">
+                <div className="flex items-center justify-between pb-4 border-b border-muted">
+                  <h3 className="text-[10px] uppercase tracking-[0.5em] opacity-40">Access & Distribution</h3>
+                  <span className="text-[9px] font-mono opacity-20">PUBLIC</span>
                 </div>
-              </div>
-            </div>
+                
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="p-8 border border-muted/60 bg-muted/5 space-y-6"
+                >
+                  <div className="flex items-center gap-3 text-[9px] uppercase tracking-[0.3em] opacity-40">
+                    <Globe className="w-3 h-3" />
+                    <span>Public URL</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm opacity-30 font-mono">formora.com/f/</span>
+                    <div className="relative flex-1">
+                      <Input 
+                        value={slug}
+                        onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                        placeholder="your-form-slug"
+                        className={cn(
+                          "h-12 !border-muted focus:!border-ink font-heading italic text-lg bg-transparent",
+                          slugError && "!border-destructive",
+                          slug && !isSlugValidating && !slugError && "!border-green-600"
+                        )}
+                      />
+                      {isSlugValidating && (
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                          <Loader2 className="w-4 h-4 animate-spin opacity-40" />
+                        </div>
+                      )}
+                      {!isSlugValidating && slug && !slugError && (
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-green-600">
+                          <CheckCircle2 className="w-4 h-4" />
+                        </div>
+                      )}
+                      {!isSlugValidating && slug && slugError && (
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-destructive">
+                          <AlertCircle className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {slugError ? (
+                    <p className="text-[10px] text-destructive">{slugError}</p>
+                  ) : (
+                    <p className="text-[10px] font-mono opacity-30">
+                      {slug ? `→ formora.com/f/${slug}` : 'Leave empty to use the form ID'}
+                    </p>
+                  )}
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="flex items-center justify-between p-6 border border-muted/60 bg-muted/5 group hover:border-muted transition-colors"
+                >
+                  <div className="space-y-1">
+                    <div className="text-[11px] uppercase tracking-[0.2em] font-medium flex items-center gap-2">
+                      <Shield className="w-3 h-3 opacity-40" />
+                      Single Response Mode
+                    </div>
+                    <div className="text-[10px] opacity-40">Limit each user to one submission (IP + local storage)</div>
+                  </div>
+                  <Switch 
+                    checked={limitOneResponse}
+                    onCheckedChange={setLimitOneResponse}
+                  />
+                </motion.div>
+              </section>
+            </motion.div>
           </TabsContent>
         </Tabs>
       </main>

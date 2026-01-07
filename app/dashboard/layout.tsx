@@ -36,32 +36,34 @@ const navItems = [
 
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
-    <div className="flex flex-col h-full p-8">
-      <div className="mb-12">
-        <Link href="/" className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-xl">
-            <Sparkles className="w-7 h-7 text-primary-foreground" />
-          </div>
-          <span className="font-black text-3xl tracking-tighter uppercase">Formora</span>
+    <div className="flex flex-col h-full px-6 py-8">
+      <div className="mb-16">
+        <Link href="/" className="inline-block group">
+          <span className="font-heading text-2xl italic tracking-tight">Formora</span>
+          <span className="block text-[9px] uppercase tracking-[0.4em] opacity-30 mt-1">Architect Panel</span>
         </Link>
       </div>
       
-      <nav className="flex-1 space-y-3">
+      <nav className="flex-1 space-y-1">
         {navItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             onClick={onNavigate}
-            className="flex items-center gap-4 px-6 py-4 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 group"
+            className="flex items-center gap-4 px-4 py-3 text-ink opacity-50 hover:opacity-100 hover:bg-muted/10 transition-all duration-200 group border-l-2 border-transparent hover:border-ink/30"
           >
-            <item.icon className="w-6 h-6 group-hover:scale-110 transition-transform" />
-            <span className="font-black uppercase tracking-tight text-sm">{item.label}</span>
+            <item.icon className="w-4 h-4" />
+            <span className="text-[10px] uppercase tracking-[0.3em] font-medium">{item.label}</span>
           </Link>
         ))}
       </nav>
       
-      <div className="mt-auto pt-8">
-        {/* Plan info removed */}
+      <div className="mt-auto pt-8 border-t border-muted">
+        <div className="text-[9px] uppercase tracking-[0.3em] opacity-20">System Status</div>
+        <div className="flex items-center gap-2 mt-2">
+          <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+          <span className="text-[9px] opacity-40">Operational</span>
+        </div>
       </div>
     </div>
   );
@@ -76,15 +78,15 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex bg-background noise-bg">
+    <div className="min-h-screen flex bg-bg font-body">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-80 border-r-4 border-foreground bg-card flex-col sticky top-0 h-screen">
+      <aside className="hidden md:flex w-64 border-r border-muted bg-bg flex-col sticky top-0 h-screen">
         <Sidebar />
       </aside>
 
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="p-0 w-80 border-r-4 border-foreground">
+        <SheetContent side="left" className="p-0 w-64 border-r border-muted">
           <Sidebar onNavigate={() => setSidebarOpen(false)} />
         </SheetContent>
       </Sheet>
@@ -92,19 +94,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Header */}
-        <header className="h-20 border-b bg-card/30 backdrop-blur-md flex items-center justify-between px-6 md:px-10 sticky top-0 z-30">
+        <header className="h-16 border-b border-muted bg-bg/80 backdrop-blur-sm flex items-center justify-between px-6 sticky top-0 z-30">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden rounded-xl"
+              className="md:hidden"
               onClick={() => setSidebarOpen(true)}
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5" />
             </Button>
             {!isAppwriteConfigured() && (
-              <div className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-xs font-bold uppercase tracking-wider">
-                <AlertTriangle className="w-4 h-4" />
+              <div className="hidden lg:flex items-center gap-2 px-4 py-2 border border-yellow-500/30 text-yellow-600 text-[9px] uppercase tracking-[0.2em]">
+                <AlertTriangle className="w-3 h-3" />
                 Appwrite not configured
               </div>
             )}
@@ -113,31 +115,31 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-12 w-12 rounded-2xl p-0 overflow-hidden border bg-background/50">
+                <Button variant="ghost" className="relative h-10 w-10 p-0 border border-muted">
                   <Avatar className="h-full w-full rounded-none">
                     <AvatarImage src={user.profileImageUrl || undefined} alt={user.displayName || ''} />
-                    <AvatarFallback className="rounded-none font-bold">{user.displayName?.[0] || 'U'}</AvatarFallback>
+                    <AvatarFallback className="rounded-none text-[10px] font-heading italic">{user.displayName?.[0] || 'U'}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2">
+              <DropdownMenuContent align="end" className="w-56 rounded-none border-muted p-2">
                 <div className="px-3 py-2 mb-2">
-                  <p className="text-sm font-bold truncate">{user.displayName}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user.primaryEmail}</p>
+                  <p className="text-sm font-heading italic truncate">{user.displayName}</p>
+                  <p className="text-[10px] opacity-40 truncate">{user.primaryEmail}</p>
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className="rounded-xl">
+                <DropdownMenuSeparator className="bg-muted" />
+                <DropdownMenuItem asChild className="rounded-none text-[10px] uppercase tracking-[0.2em]">
                   <Link href="/dashboard/settings" className="flex items-center gap-2 w-full">
-                    <Settings className="w-4 h-4" />
+                    <Settings className="w-3 h-3" />
                     Settings
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="bg-muted" />
                 <DropdownMenuItem 
-                  className="text-destructive focus:text-destructive rounded-xl"
+                  className="text-danger rounded-none text-[10px] uppercase tracking-[0.2em]"
                   onClick={() => user.signOut()}
                 >
-                  <LogOut className="w-4 h-4 mr-2" />
+                  <LogOut className="w-3 h-3 mr-2" />
                   Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -145,7 +147,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full">
+        <main className="flex-1 p-6 md:p-12 max-w-7xl mx-auto w-full">
           {children}
         </main>
       </div>
