@@ -7,10 +7,12 @@ import { ArrowRight } from 'lucide-react';
 
 export function CtaSection() {
   return (
-    <section className="py-32 relative overflow-hidden">
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="relative rounded-[4rem] bg-foreground text-background p-16 md:p-32 overflow-hidden group shadow-[30px_30px_0px_0px_var(--primary)]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,var(--primary)/20%,transparent_70%)] opacity-50" />
+    <section className="py-40 relative overflow-hidden font-body">
+      <div className="container mx-auto px-6 relative z-10">
+        <div className="relative bg-ink text-bg p-16 md:p-24 overflow-hidden">
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 49px, currentColor 49px, currentColor 50px), repeating-linear-gradient(90deg, transparent, transparent 49px, currentColor 49px, currentColor 50px)' }} />
+          </div>
           
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -19,24 +21,25 @@ export function CtaSection() {
             transition={{ duration: 0.6 }}
             className="relative z-10 text-center max-w-4xl mx-auto"
           >
-            <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-10 leading-[0.8] uppercase">
+            <p className="text-[10px] uppercase tracking-[0.5em] opacity-40 mb-8">Begin</p>
+            <h2 className="text-5xl md:text-8xl font-heading tracking-tighter leading-[0.85] italic mb-10">
               Ready to <br />
-              <span className="text-primary">start building?</span>
+              <span className="opacity-60">Start Building?</span>
             </h2>
-            <p className="text-xl md:text-2xl text-background/60 mb-16 max-w-2xl mx-auto font-bold tracking-tight">
+            <p className="text-lg md:text-xl opacity-40 mb-16 max-w-2xl mx-auto">
               Join thousands of creators building better forms with Formora. 
               Start for free, no credit card required.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <Button size="lg" className="h-20 px-12 rounded-2xl text-2xl font-black bg-primary text-primary-foreground hover:bg-primary/90 group" asChild>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button size="lg" className="h-14 px-10 bg-bg text-ink hover:bg-bg/90 text-[11px] uppercase tracking-[0.3em]" asChild>
                 <Link href="/handler/sign-up">
-                  GET STARTED NOW
-                  <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-2 transition-transform" />
+                  Get Started Now
+                  <ArrowRight className="ml-3 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="h-20 px-12 rounded-2xl text-2xl font-black border-4 border-background hover:bg-background hover:text-foreground" asChild>
+              <Button size="lg" variant="outline" className="h-14 px-10 border-bg/30 text-bg hover:bg-bg/10 text-[11px] uppercase tracking-[0.3em]" asChild>
                 <Link href="/templates">
-                  TEMPLATES
+                  View Templates
                 </Link>
               </Button>
             </div>

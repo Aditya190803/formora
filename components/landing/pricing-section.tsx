@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const plans = [
@@ -55,8 +54,8 @@ const plans = [
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="py-32 relative overflow-hidden">
-      <div className="container mx-auto px-4 relative z-10">
+    <section id="pricing" className="py-40 relative overflow-hidden font-body">
+      <div className="container mx-auto px-6 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -64,16 +63,17 @@ export function PricingSection() {
           transition={{ duration: 0.6 }}
           className="text-center max-w-4xl mx-auto mb-24"
         >
-          <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-8 leading-[0.9] uppercase">
-            Simple <br />
-            <span className="gradient-text">pricing</span>
+          <p className="text-[10px] uppercase tracking-[0.5em] text-muted-foreground mb-8">Pricing</p>
+          <h2 className="text-5xl md:text-7xl font-heading tracking-tighter leading-[0.85] italic mb-8">
+            Simple, <br />
+            <span className="opacity-40">transparent pricing</span>
           </h2>
-          <p className="text-xl md:text-2xl text-muted-foreground font-medium tracking-tight">
+          <p className="text-lg md:text-xl text-muted-foreground opacity-60">
             Start for free. Upgrade when you need more power.
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-3 max-w-6xl mx-auto border border-muted">
           {plans.map((plan, i) => (
             <motion.div
               key={i}
@@ -82,32 +82,32 @@ export function PricingSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
               className={cn(
-                "relative flex flex-col p-10 rounded-[3rem] border-4 border-foreground bg-card transition-all duration-500",
-                plan.popular ? "shadow-[15px_15px_0px_0px_var(--primary)] -translate-y-4" : "shadow-[15px_15px_0px_0px_rgba(0,0,0,0.1)] dark:shadow-[15px_15px_0px_0px_rgba(255,255,255,0.05)]"
+                "relative flex flex-col p-10 transition-all duration-500",
+                i !== plans.length - 1 && "lg:border-r border-muted",
+                i !== 0 && "border-t lg:border-t-0 border-muted",
+                plan.popular && "bg-muted/30"
               )}
             >
               {plan.popular && (
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full bg-primary text-primary-foreground text-xs font-black uppercase tracking-widest">
-                  Most Popular
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-1.5 bg-ink text-bg text-[9px] uppercase tracking-[0.3em]">
+                  Popular
                 </div>
               )}
               
-              <div className="mb-8">
-                <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">{plan.name}</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-6xl font-black tracking-tighter">{plan.price}</span>
-                  <span className="text-muted-foreground font-bold uppercase text-xs">{plan.period}</span>
+              <div className="mb-10">
+                <p className="text-[10px] uppercase tracking-[0.5em] text-muted-foreground mb-4">{plan.name}</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-heading italic tracking-tighter">{plan.price}</span>
+                  <span className="text-muted-foreground text-[10px] uppercase tracking-[0.3em] opacity-60">{plan.period}</span>
                 </div>
-                <p className="mt-4 text-muted-foreground font-medium leading-tight">{plan.description}</p>
+                <p className="mt-4 text-muted-foreground text-sm opacity-60">{plan.description}</p>
               </div>
 
               <div className="space-y-4 mb-10 flex-1">
                 {plan.features.map((feature, j) => (
                   <div key={j} className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Check className="w-3 h-3 text-primary" />
-                    </div>
-                    <span className="text-sm font-bold tracking-tight">{feature}</span>
+                    <div className="w-1 h-1 bg-foreground opacity-40 flex-shrink-0" />
+                    <span className="text-sm opacity-80">{feature}</span>
                   </div>
                 ))}
               </div>
@@ -116,8 +116,8 @@ export function PricingSection() {
                 size="lg" 
                 variant={plan.popular ? "default" : "outline"} 
                 className={cn(
-                  "w-full h-16 text-lg font-black rounded-2xl uppercase",
-                  plan.popular ? "bg-primary hover:bg-primary/90" : "border-4 border-foreground hover:bg-foreground hover:text-background"
+                  "w-full h-12 text-[11px] uppercase tracking-[0.2em]",
+                  plan.popular ? "bg-ink text-bg hover:bg-ink/90" : "border-muted hover:bg-muted"
                 )}
               >
                 {plan.cta}

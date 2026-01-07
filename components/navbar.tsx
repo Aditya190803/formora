@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useUser } from '@stackframe/stack';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Sparkles } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useState } from 'react';
 
 export function Navbar() {
@@ -12,41 +12,39 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 z-50 w-full px-4 py-8">
-      <div className="container mx-auto h-20 flex items-center justify-between px-10 rounded-[2.5rem] bg-card border-4 border-foreground shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] dark:shadow-[10px_10px_0px_0px_rgba(255,255,255,0.1)]">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-            <Sparkles className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <span className="font-black text-2xl tracking-tighter">Formora</span>
+    <header className="fixed top-0 z-50 w-full px-6 py-10 pointer-events-none">
+      <div className="container mx-auto flex items-center justify-between pointer-events-auto">
+        <Link href="/" className="flex items-center gap-2 group">
+          <span className="font-display text-3xl font-medium tracking-tighter text-ink">Formora</span>
+          <span className="w-1.5 h-1.5 bg-accent rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
-          <Link href="/#features" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">
-            Features
+        <nav className="hidden md:flex items-center gap-12">
+          <Link href="/#features" className="text-[10px] font-body uppercase tracking-[0.4em] text-ink opacity-40 hover:opacity-100 transition-opacity">
+            Manifesto
           </Link>
-          <Link href="/#styles" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">
-            Styles
+          <Link href="/#styles" className="text-[10px] font-body uppercase tracking-[0.4em] text-ink opacity-40 hover:opacity-100 transition-opacity">
+            Philosophy
           </Link>
-          <Link href="/#pricing" className="text-sm font-bold text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest">
-            Pricing
+          <Link href="/#pricing" className="text-[10px] font-body uppercase tracking-[0.4em] text-ink opacity-40 hover:opacity-100 transition-opacity">
+            Access
           </Link>
         </nav>
 
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-8">
           {user ? (
-            <Button className="rounded-2xl font-black px-8 h-12 uppercase tracking-tight" asChild>
-              <Link href="/dashboard">Dashboard</Link>
-            </Button>
+            <Link href="/dashboard" className="text-[10px] font-body uppercase tracking-[0.4em] text-ink border-b border-ink">
+              Architect / Dashboard
+            </Link>
           ) : (
             <>
-              <Button variant="ghost" className="font-black uppercase tracking-tight" asChild>
-                <Link href="/handler/sign-in">Sign In</Link>
-              </Button>
-              <Button className="rounded-2xl font-black px-8 h-12 uppercase tracking-tight shadow-lg shadow-primary/20" asChild>
-                <Link href="/handler/sign-up">Get Started</Link>
-              </Button>
+              <Link href="/handler/sign-in" className="text-[10px] font-body uppercase tracking-[0.4em] text-ink opacity-60">
+                Inhabit
+              </Link>
+              <Link href="/handler/sign-up" className="px-6 py-2 bg-ink text-bg text-[10px] font-body uppercase tracking-[0.4em] hover:bg-accent transition-colors">
+                Initialize
+              </Link>
             </>
           )}
         </div>
