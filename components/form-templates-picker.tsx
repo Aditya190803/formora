@@ -35,99 +35,75 @@ export function FormTemplatesPicker({ onSelectTemplate }: FormTemplatesPickerPro
   ];
 
   const categoryLabels: Record<TemplateCategory | 'all', string> = {
-    all: 'All Templates',
-    feedback: 'Feedback',
-    waitlist: 'Waitlist',
-    onboarding: 'Onboarding',
-    contact: 'Contact',
-    survey: 'Survey',
+    all: 'All',
+    feedback: 'Feedback Systems',
+    waitlist: 'Lead Capture',
+    onboarding: 'Guided Flow',
+    contact: 'Touchpoints',
+    survey: 'Inquiry',
   };
 
   return (
-    <div className="space-y-8">
-      {/* Category Filter */}
-      <div className="flex flex-wrap gap-2">
+    <div className="space-y-16 font-body">
+      {/* Category Filter - Editorial Navigation */}
+      <div className="flex flex-wrap gap-x-12 gap-y-4 border-b border-muted pb-8">
         {categories.map(category => (
-          <motion.button
+          <button
             key={category}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             onClick={() => setSelectedCategory(category)}
-            className={`px-4 py-2 rounded-full font-medium transition-all ${
+            className={`text-[10px] uppercase tracking-[0.4em] font-medium transition-all relative py-2 ${
               selectedCategory === category
-                ? 'bg-primary text-white'
-                : 'bg-muted hover:bg-muted-foreground/10'
+                ? 'opacity-100'
+                : 'opacity-30 hover:opacity-60'
             }`}
           >
             {categoryLabels[category]}
-          </motion.button>
+            {selectedCategory === category && (
+              <motion.div 
+                layoutId="activeCategory"
+                className="absolute -bottom-[1px] left-0 right-0 h-[1px] bg-ink"
+              />
+            )}
+          </button>
         ))}
       </div>
 
-      {/* Templates Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Templates Grid - Industrial Index/Ledger */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-x divide-y border border-muted">
         {templates.map((template, index) => (
           <motion.div
             key={template.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: index * 0.05 }}
+            onClick={() => onSelectTemplate(template)}
+            className="group cursor-pointer p-8 space-y-8 hover:bg-muted/5 transition-colors aspect-square flex flex-col justify-between"
           >
-            <Card className="h-full cursor-pointer hover:shadow-lg transition-shadow" onClick={() => onSelectTemplate(template)}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{template.name}</CardTitle>
-                    <CardDescription className="text-sm mt-1">
-                      {template.description}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {/* Template Info */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">
-                        {template.recommendedStyle}
-                      </Badge>
-                      <Badge variant="secondary" className="text-xs">
-                        {template.baseForm.questions.length} questions
-                      </Badge>
-                    </div>
-                    {template.tags && (
-                      <div className="flex flex-wrap gap-1">
-                        {template.tags.map(tag => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+            <div className="space-y-4">
+              <span className="text-[10px] opacity-20 font-mono tracking-tighter">
+                [ {index.toString().padStart(2, '0')} ]
+              </span>
+              <h3 className="text-2xl font-heading tracking-tight leading-tight group-hover:italic transition-all">
+                {template.name}
+              </h3>
+              <p className="text-sm opacity-50 line-clamp-2 leading-relaxed">
+                {template.description}
+              </p>
+            </div>
 
-                  {/* Use Button */}
-                  <Button className="w-full" size="sm">
-                    Use This Template
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex items-end justify-between uppercase text-[9px] tracking-[0.2em] font-medium">
+              <div className="space-y-1">
+                <div className="opacity-40">Style</div>
+                <div>{template.recommendedStyle}</div>
+              </div>
+              <div className="space-y-1 text-right">
+                <div className="opacity-40">Elements</div>
+                <div>{template.baseForm.questions.length} Nodes</div>
+              </div>
+            </div>
           </motion.div>
         ))}
       </div>
-
-      {templates.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-12"
-        >
-          <p className="text-muted-foreground">No templates found in this category.</p>
-        </motion.div>
-      )}
     </div>
   );
 }
