@@ -1,0 +1,38 @@
+# Formora
+
+> A modern form builder platform with multiple rendering styles, analytics, conditional logic, and team collaboration.
+
+## Overview
+Formora is a powerful form building platform that lets users create beautiful, functional forms with multiple rendering styles (classic, conversational, marketing, minimal, neo-brutalism), advanced conditional logic, analytics, and team features.
+
+## Key Features
+- **Form Builder** — Drag-and-drop form creation with rich question types
+- **Multiple Renderers** — Classic, Conversational, Marketing, Minimal, Neo-Brutalism styles
+- **Form Templates** — Pre-built form templates for quick setup
+- **Conditional Logic** — Advanced branching and conditional question display
+- **Analytics Dashboard** — Real-time form response analytics
+- **Email Notifications** — Automated email alerts for form submissions
+- **Team Collaboration** — Multi-user team support
+- **Slack Integration** — Send form responses directly to Slack
+- **Webhooks** — Custom webhook integrations
+- **Enterprise Security** — Built-in security features for enterprise use
+- **Form Sharing** — Share forms via unique URLs (`/f/[formId]`)
+
+## Pages
+- `/` — Landing page
+- `/dashboard` — Dashboard overview
+- `/dashboard/forms` — All forms
+- `/dashboard/forms/new` — Create new form
+- `/dashboard/forms/[formId]` — Form editor
+- `/dashboard/forms/[formId]/analytics` — Form analytics
+- `/dashboard/responses` — All form responses
+- `/dashboard/settings` — Account settings
+- `/f/[formId]` — Public form rendering
+
+## Tech Stack
+- Next.js (App Router)
+- Appwrite (Backend)
+- Stack Auth (Authentication)
+- TypeScript
+- Tailwind CSS
+- shadcn/ui

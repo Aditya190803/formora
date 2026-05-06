@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Protected routes
+Disallow: /dashboard/
+Disallow: /handler/
+
+# Public form rendering is accessible
+Allow: /f/
+
+Sitemap: https://formora.adityamer.dev/sitemap.xml
